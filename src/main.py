@@ -12,6 +12,7 @@ from src.qp import QP
 
 def solve(problem, constraints, x0, As, n):
     x_optimal = np.zeros(n)
+    iterations = []
 
     start = time.time()
     for i, c in enumerate(constraints):
@@ -20,11 +21,12 @@ def solve(problem, constraints, x0, As, n):
         bcqp = BCQP(problem, c)
         bcqp.problem.subQ = bcqp.problem.Q[indexes][:, indexes]
         bcqp.problem.subq = bcqp.problem.q[indexes]
-        x_i = frank_wolfe(bcqp, x_init)
+        x_i, i = frank_wolfe(bcqp, x_init, eps=1e-6, max_iter=1000)
         x_optimal[indexes] = x_i
+        iterations.append(i)
     end = time.time()
 
-    return x_optimal, end - start
+    return x_optimal, end - start, iterations
 
 
 def main():
@@ -40,9 +42,10 @@ def main():
     problem = QP(n, rank=n, c=False, seed=1)
     x0 = create_feasible_point(n, Is)
 
-    x_optimal, execution_time = solve(problem, constraints, x0, As, n)
+    x_optimal, execution_time, iterations = solve(problem, constraints, x0, As, n)
     print(f'Optimal solution: {x_optimal}')
     print(f'Execution time: {execution_time}')
+    print(f'Iterations: {iterations}')
 
 
 if __name__ == '__main__':

@@ -6,7 +6,8 @@ import numpy as np
 def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 1000):
     x = x0
     best_lb = -np.Inf
-    while max_iter > 0:
+    i = 0
+    while i < max_iter:
         v = cqp.problem.evaluate(x)
         grad = cqp.problem.derivative(x)
 
@@ -33,6 +34,6 @@ def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 100
 
         x = x + alpha * d
 
-        max_iter -= 1
+        i += 1
 
-    return x
+    return x, i
