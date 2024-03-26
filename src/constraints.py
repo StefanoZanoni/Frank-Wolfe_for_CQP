@@ -1,21 +1,27 @@
 import numpy as np
 
 
-class C:
+class Constraints:
     def __init__(self, A: np.ndarray, b: np.ndarray, ineq: bool = True):
 
         self.A = A
-        self.num_constraints = A.shape[0]
-
         self.b = b
-        self.box_max = np.max(b)
         self.ineq = ineq
+        self.num_constraints = len(b)
 
     def evaluate(self, x):
         if self.ineq:
             return np.dot(self.A, x) - self.b <= 0
         else:
             return np.dot(self.A, x) - self.b == 0
+
+
+class BoxConstraints(Constraints):
+    def __init__(self, A: np.ndarray, b: np.ndarray, ineq: bool = True):
+        self.box_min = np.min(b)
+        self.box_max = np.max(b)
+
+        super().__init__(A, b, ineq)
 
 
 def create_A(n: int, index_set: list):

@@ -22,14 +22,16 @@ class QP:
 
         self.dim = dim
         self.Q = generate_pos_semdef_matrix(dim, rank)
+        self.__subQ = self.Q
         self.q = np.random.rand(dim)
+        self.__subq = self.q
         if c:
             self.c = np.random.rand(1)
         else:
             self.c = 0
 
     def evaluate(self, x):
-        return np.dot(np.dot(x, self.Q), x) + np.dot(self.q, x) + self.c
+        return np.dot(np.dot(x, self.subQ), x) + np.dot(self.subq, x) + self.c
 
     def derivative(self, x):
-        return 2 * np.dot(self.Q, x) + self.q
+        return 2 * np.dot(self.subQ, x) + self.subq

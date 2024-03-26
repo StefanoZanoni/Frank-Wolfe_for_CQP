@@ -25,7 +25,7 @@ def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 100
 
         # line search
         d = z - x
-        den = d.T * cqp.problem.Q * d
+        den = d.T * cqp.problem.subQ * d
         if np.linalg.norm(den) <= 1e-16:
             alpha = 1
         else:
