@@ -1,4 +1,4 @@
-from cqp import CQP
+from src.cqp import CQP
 
 import numpy as np
 
@@ -8,8 +8,13 @@ def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 100
     best_lb = -np.Inf
     i = 0
     while i < max_iter:
+        print(f'Iteration {i}')
         v = cqp.problem.evaluate(x)
         grad = cqp.problem.derivative(x)
+
+        print(f'x: {x}')
+        print(f'v: {v}')
+        print(f'grad: {grad}')
 
         # solve the linear subproblem
         z = np.zeros_like(x)
@@ -26,6 +31,7 @@ def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 100
 
         # line search
         d = z - x
+        print(f'd: {d}')
         den = d.T * cqp.problem.subQ * d
         if np.linalg.norm(den) <= 1e-16:
             alpha = 1
@@ -35,5 +41,7 @@ def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 100
         x = x + alpha * d
 
         i += 1
+
+        
 
     return x, i

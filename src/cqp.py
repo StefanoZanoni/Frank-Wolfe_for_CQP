@@ -1,6 +1,6 @@
 import numpy as np
 
-from qp import QP
+from src.qp import QP
 from src.constraints import Constraints, BoxConstraints
 
 
