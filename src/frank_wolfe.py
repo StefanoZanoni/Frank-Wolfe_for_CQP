@@ -29,6 +29,7 @@ def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 100
         gap = (v - best_lb) / max(np.abs(v), 1)
 
         if gap < eps:
+            print('\n')
             break
 
         # line search
