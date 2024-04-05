@@ -19,9 +19,8 @@ def solve(problem, constraints, x0, As, n):
         indexes = As[i][0] != 0
         x_init = x0[indexes]
         bcqp = BCQP(problem, c)
-        bcqp.problem.subQ = bcqp.problem.Q[indexes][:, indexes]
-        bcqp.problem.subq = bcqp.problem.q[indexes]
-        x_i, i = frank_wolfe(bcqp, x_init, eps=1e-6, max_iter=10)
+        bcqp.problem.set_subproblem(indexes)
+        x_i, i = frank_wolfe(bcqp, x_init, eps=1e-6, max_iter=5)
         x_optimal[indexes] = x_i
         iterations.append(i)
     end = time.time()

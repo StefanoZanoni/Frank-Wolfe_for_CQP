@@ -22,9 +22,9 @@ class QP:
 
         self.dim = dim
         self.Q = generate_pos_semdef_matrix(dim, rank)
-        self.__subQ = self.Q
+        self.subQ = self.Q
         self.q = np.random.rand(dim)
-        self.__subq = self.q
+        self.subq = self.q
         if c:
             self.c = np.random.rand(1)
         else:
@@ -35,3 +35,7 @@ class QP:
 
     def derivative(self, x):
         return 2 * np.dot(self.subQ, x) + self.subq
+
+    def set_subproblem(self, indexes):
+        self.subQ = self.Q[indexes][:, indexes]
+        self.subq = self.q[indexes]

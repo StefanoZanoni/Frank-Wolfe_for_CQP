@@ -20,10 +20,12 @@ def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 100
         z = np.zeros_like(x)
         ind = grad < 0
         z[ind] = cqp.constraints.box_max
+        print(f'z: {z}')
 
         lb = v + grad * (z - x)
-        if np.linalg.norm(lb) > best_lb:
-            best_lb = np.linalg.norm(lb)
+        lb_norm = np.linalg.norm(lb)
+        if lb_norm > best_lb:
+            best_lb = lb_norm
         gap = (v - best_lb) / max(np.abs(v), 1)
 
         if np.linalg.norm(gap) < eps:
@@ -33,15 +35,17 @@ def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 100
         d = z - x
         print(f'd: {d}')
         den = d.T * cqp.problem.subQ * d
-        if np.linalg.norm(den) <= 1e-16:
+        print(f'den: {den}')
+        den_norm = np.linalg.norm(den)
+        if den_norm <= 1e-16:
             alpha = 1
         else:
-            alpha = min(np.linalg.norm(-grad.T * d) / np.linalg.norm(den), 1)
+            alpha = min(np.linalg.norm(-grad.T * d) / den_norm, 1)
 
         x = x + alpha * d
+        print(f'alpha: {alpha}')
+        print(f'x: {x}\n')
 
         i += 1
-
-        
 
     return x, i
