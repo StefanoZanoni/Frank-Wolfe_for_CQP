@@ -28,14 +28,13 @@ def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 100
             best_lb = lb_norm
         gap = (v - best_lb) / max(np.abs(v), 1)
 
-        if np.linalg.norm(gap) < eps:
+        if gap < eps:
             break
 
         # line search
         d = z - x
         print(f'd: {d}')
         den = d.T * cqp.problem.subQ * d
-        print(f'den: {den}')
         den_norm = np.linalg.norm(den)
         if den_norm <= 1e-16:
             alpha = 1
@@ -48,4 +47,4 @@ def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 100
 
         i += 1
 
-    return x, i
+    return x, i + 1

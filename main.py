@@ -43,7 +43,7 @@ def main():
 
     x_optimal, execution_time, iterations = solve(problem, constraints, x0, As, n)
     print(f'Optimal solution: {x_optimal}')
-    print(f'Execution time: {execution_time}')
+    print(f'Execution time: {round(execution_time * 1000, 5)}ms')
     print(f'Iterations: {iterations}')
 
 
