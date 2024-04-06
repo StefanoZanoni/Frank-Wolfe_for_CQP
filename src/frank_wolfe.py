@@ -19,7 +19,9 @@ def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 100
         # solve the linear subproblem
         z = np.zeros_like(x)
         ind = grad < 0
-        z[ind] = cqp.constraints.box_max
+        true_ind = sum(ind)
+        if true_ind > 0:
+            z[ind] = cqp.constraints.box_max / true_ind
         print(f'z: {z}')
 
         lb = v + grad * (z - x)
@@ -48,4 +50,4 @@ def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 100
 
         i += 1
 
-    return x, i + 1
+    return x, i

@@ -23,10 +23,10 @@ class QP:
         self.dim = dim
         self.Q = generate_pos_semdef_matrix(dim, rank)
         self.subQ = self.Q
-        self.q = np.random.uniform(-2, 2, dim)
+        self.q = np.random.uniform(-1, 1, dim)
         self.subq = self.q
         if c:
-            self.c = np.random.uniform(-2, 2)
+            self.c = np.random.uniform(-1, 1)
         else:
             self.c = 0
 

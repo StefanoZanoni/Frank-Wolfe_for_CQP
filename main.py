@@ -20,7 +20,7 @@ def solve(problem, constraints, x0, As, n):
         x_init = x0[indexes]
         bcqp = BCQP(problem, c)
         bcqp.problem.set_subproblem(indexes)
-        x_i, i = frank_wolfe(bcqp, x_init, eps=1e-6, max_iter=5)
+        x_i, i = frank_wolfe(bcqp, x_init, eps=1e-6, max_iter=100)
         x_optimal[indexes] = x_i
         iterations.append(i)
         print('\n')
@@ -39,7 +39,7 @@ def main():
     b = create_b()
 
     constraints = [BoxConstraints(A, b, ineq=True) for A in As]
-    problem = QP(n, rank=n, c=False, seed=5)
+    problem = QP(n, rank=n, c=False)
     x0 = create_feasible_point(n, Is)
 
     x_optimal, execution_time, iterations = solve(problem, constraints, x0, As, n)
