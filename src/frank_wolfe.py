@@ -1,4 +1,6 @@
 from src.cqp import CQP
+from src.line_search import ExactLineSearch, BackTrackingLineSearch, BackTrackingArmijoLineSearch, BackTrackingArmijoStrongWolfeLineSearch
+
 
 import numpy as np
 
@@ -7,6 +9,7 @@ def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 100
     x = x0
     best_lb = -np.Inf
     i = 0
+    ls = BackTrackingArmijoStrongWolfeLineSearch(cqp.problem, alpha=1, tau=0.5, beta=1e-4, seed=5)
     while i < max_iter:
         print(f'Iteration {i}')
         v = cqp.problem.evaluate(x)
@@ -24,11 +27,12 @@ def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 100
             z[ind] = cqp.constraints.box_max / true_ind
         print(f'z: {z}')
 
-        lb = v + grad * (z - x)
-        lb_norm = np.linalg.norm(lb)
-        if lb_norm > best_lb:
-            best_lb = lb_norm
-        gap = (v - best_lb) / max(np.abs(v), 1)
+        lb = v + np.dot(grad, z - x)
+        if lb > best_lb:
+            best_lb = lb
+        print(f'best_lb: {best_lb}')
+        gap = v - best_lb / max(np.abs(v), 1)
+        print(f'gap: {gap}')
 
         if gap < eps:
             print('\n')
@@ -36,13 +40,7 @@ def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 100
 
         # line search
         d = z - x
-        print(f'd: {d}')
-        den = d.T * cqp.problem.subQ * d
-        den_norm = np.linalg.norm(den)
-        if den_norm <= 1e-16:
-            alpha = 1
-        else:
-            alpha = min(np.linalg.norm(-grad.T * d) / den_norm, 1)
+        alpha = ls.compute(x, d)
 
         x = x + alpha * d
         print(f'alpha: {alpha}')

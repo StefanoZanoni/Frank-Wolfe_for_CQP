@@ -3,7 +3,9 @@ import random
 import numpy as np
 
 
-def create_index_sets(n: int, cardinality_K: int, uniform: bool = True):
+def create_index_sets(n: int, cardinality_K: int, uniform: bool = True, seed: int = None):
+    if seed:
+        random.seed(seed)
     Is = []
     ks = list(np.arange(n))
     if uniform:
