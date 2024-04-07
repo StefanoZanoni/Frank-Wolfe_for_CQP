@@ -20,7 +20,7 @@ def solve(problem, constraints, x0, As, n):
         x_init = x0[indexes]
         bcqp = BCQP(problem, c)
         bcqp.problem.set_subproblem(indexes)
-        x_i, i = frank_wolfe(bcqp, x_init, eps=1e-6, max_iter=23)
+        x_i, i = frank_wolfe(bcqp, x_init, eps=1e-6, max_iter=100)
         x_optimal[indexes] = x_i
         iterations.append(i)
         print('\n')
