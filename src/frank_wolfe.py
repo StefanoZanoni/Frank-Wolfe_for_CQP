@@ -20,7 +20,7 @@ def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 100
     # best lower bound found so far
     best_lb = -np.Inf
     i = 0
-    ls = BackTrackingArmijoStrongWolfeLineSearch(cqp.problem, alpha=1, tau=0.5, beta=1e-4)
+    ls = BackTrackingArmijoStrongWolfeLineSearch(cqp.problem, alpha=1, tau=0.9, beta=1e-4)
     while i < max_iter:
         v = cqp.problem.evaluate(x)
         grad = cqp.problem.derivative(x)
@@ -39,7 +39,7 @@ def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 100
         if lb > best_lb:
             best_lb = lb
 
-        gap = v - best_lb / max(np.abs(v), 1)
+        gap = (v - best_lb) / max(np.abs(v), 1)
         if gap < eps:
             print(f'Iteration {i}: status = optimal, v = {round(v, 5)}, gap = {gap}')
             break
