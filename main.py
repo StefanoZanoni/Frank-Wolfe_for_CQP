@@ -54,7 +54,7 @@ def main():
     Parse the command line arguments, create the problem and constraints, and solve the problem.
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument('dimension', type=int, help='problem dimension')
+    parser.add_argument('dimension', type=int, help='problem dimension', nargs='?', default=10)
     n = parser.parse_args().dimension
 
     Is = create_index_sets(n, 3, uniform=True)
