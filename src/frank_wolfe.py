@@ -41,7 +41,7 @@ def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 100
 
         gap = v - best_lb / max(np.abs(v), 1)
         if gap < eps:
-            print(f'Iteration {i}: status = optimal, v = {v}, gap = {gap}')
+            print(f'Iteration {i}: status = optimal, v = {round(v, 5)}, gap = {gap}')
             break
 
         # line search for alpha
@@ -49,7 +49,7 @@ def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 100
         alpha = ls.compute(x, d)
         x = x + alpha * d
 
-        print(f'Iteration {i}: status = stopped, v = {v}, gap = {gap}')
+        print(f'Iteration {i}: status = stopped, v = {round(v, 5)}, gap = {gap}')
         i += 1
 
     return x, i
