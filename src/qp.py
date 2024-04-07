@@ -2,7 +2,7 @@ import numpy as np
 
 
 def generate_Q(dim: int, rank: int, eccentricity: float):
-    A = np.random.uniform(-2, 2, (rank, dim))
+    A = np.random.uniform(-1, 1, (rank, dim))
     Q = np.dot(A.T, A)
     V, D = np.linalg.eig(Q)
     if D[0, 0] > 1e-14:
