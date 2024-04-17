@@ -38,10 +38,10 @@ def solve(problem, constraints, x0, As, n):
         # consider only the subproblem relative to the indexes
         bcqp.problem.set_subproblem(indexes)
         # solve the subproblem
-        x_i, iter = frank_wolfe(bcqp, x_init, eps=1e-6, max_iter=100)
+        x_i, iteration = frank_wolfe(bcqp, x_init, eps=1e-6, max_iter=2000)
         # merge the subproblem solution with the optimal solution
         x_optimal[indexes] = x_i
-        iterations.append(iter)
+        iterations.append(iteration)
         print('\n')
     end = time.time()
 

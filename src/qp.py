@@ -77,7 +77,7 @@ class QP:
         c (float): The constant term.
 
     Methods:
-        evaluate(x): Evaluates the quadratic function at point x.
+        evaluate(x): Evaluate the quadratic function at point x.
         derivative(x): Computes the derivative of the quadratic function at point x.
         set_subproblem(indexes): Sets the subproblem by selecting specific indexes.
 
