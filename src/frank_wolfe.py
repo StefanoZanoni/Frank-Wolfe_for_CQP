@@ -16,17 +16,25 @@ def solve_LMO(grad: np.ndarray, x: np.ndarray) -> np.ndarray:
         else:
             sorted_indexes = np.argsort(grad[negative_indexes])
 
-            # z1 + z2 + ... + zn = 1
-            # zn = n / n + nu
-            # zn-1 = (n-1)u / n + nu
-            # ...
-            # z1 = u / n + nu
             # u = machine precision
-            machine_precision = sys.float_info.epsilon
-            denominator = num_negative_indexes + num_negative_indexes * machine_precision
-            z[sorted_indexes[0]] = num_negative_indexes / denominator
-            for i, index in enumerate(sorted_indexes[1:]):
-                z[index] = (num_negative_indexes - i) * machine_precision / denominator
+            # z1 + z2 + ... + zn = 1
+            # denominator = n + nu
+            # zn = n / n + nu
+            # zn-1 = (denominator - prec_numerator)(1 - u) / n + nu
+            # zn-2 = (prec_numerator - denominator - numerator)(1 - u) / n + nu
+            # ...
+            u = sys.float_info.epsilon
+
+            # base case
+            denominator = num_negative_indexes + num_negative_indexes * u
+            numerator = num_negative_indexes
+            z[sorted_indexes[0]] = numerator / denominator
+            difference = denominator - numerator
+            # recursive case
+            for index in sorted_indexes[1:]:
+                numerator = difference * (1 - u)
+                z[index] = numerator / denominator
+                difference -= numerator
     return z
 
 
