@@ -57,7 +57,7 @@ def main():
     parser.add_argument('dimension', type=int, help='problem dimension', nargs='?', default=10)
     n = parser.parse_args().dimension
 
-    Is = create_index_sets(n, 3, uniform=True)
+    Is = create_index_sets(n, 3, uniform=False)
     As = [create_A(n, I) for I in Is]
     b = create_b()
 

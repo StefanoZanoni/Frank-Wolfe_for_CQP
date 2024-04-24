@@ -29,12 +29,12 @@ def solve_LMO(grad: np.ndarray, x: np.ndarray) -> np.ndarray:
             denominator = num_negative_indexes + num_negative_indexes * u
             numerator = num_negative_indexes
             z[sorted_indexes[0]] = numerator / denominator
-            difference = denominator - numerator
+            numerator = denominator - numerator
+            z[sorted_indexes[1]] = numerator * (1 - u) / denominator
             # recursive case
-            for index in sorted_indexes[1:]:
-                numerator = difference * (1 - u)
-                z[index] = numerator / denominator
-                difference -= numerator
+            for index in sorted_indexes[1:-1]:
+                z[index] = z[index - 1] * u * (1 - u)
+            z[sorted_indexes[-1]] = z[sorted_indexes[-2]] * u
     return z
 
 
