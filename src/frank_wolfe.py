@@ -5,36 +5,10 @@ import numpy as np
 import sys
 
 
-def solve_LMO(grad: np.ndarray, x: np.ndarray) -> np.ndarray:
-    z = np.zeros_like(x)
-    negative_indexes = grad < 0
-    num_negative_indexes = sum(negative_indexes)
-    if num_negative_indexes > 0:
-        # I have to multiply the smallest negative gradient by the largest value of z
-        if num_negative_indexes == 1:
-            z[negative_indexes] = 1
-        else:
-            sorted_indexes = np.argsort(grad[negative_indexes])
-
-            # u = machine precision
-            # z1 + z2 + ... + zn = 1
-            # denominator = n + nu
-            # zn = n / n + nu
-            # zn-1 = (denominator - prec_numerator)(1 - u) / n + nu
-            # zn-2 = (prec_numerator - denominator - numerator)(1 - u) / n + nu
-            # ...
-            u = sys.float_info.epsilon
-
-            # base case
-            denominator = num_negative_indexes + num_negative_indexes * u
-            numerator = num_negative_indexes
-            z[sorted_indexes[0]] = numerator / denominator
-            numerator = denominator - numerator
-            z[sorted_indexes[1]] = numerator * (1 - u) / denominator
-            # recursive case
-            for index in sorted_indexes[1:-1]:
-                z[index] = z[index - 1] * u * (1 - u)
-            z[sorted_indexes[-1]] = z[sorted_indexes[-2]] * u
+def solve_LMO(grad: np.ndarray) -> np.ndarray:
+    z = np.zeros_like(grad)
+    min_index = np.argmin(grad)
+    z[min_index] = 1
     return z
 
 
@@ -57,7 +31,7 @@ def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 100
     best_lb = -np.Inf
 
     # line search method
-    ls = BackTrackingArmijoStrongWolfeLineSearch(cqp.problem, alpha=1, tau=0.9, beta=1e-4)
+    ls = BackTrackingLineSearch(cqp.problem)
 
     i = 0
     while i < max_iter:
@@ -65,10 +39,11 @@ def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 100
         grad = cqp.problem.derivative(x)
 
         # solve the linear minimization oracle
-        z = solve_LMO(grad, x)
+        z = solve_LMO(grad)
 
         # first order model evaluation
-        lb = v + np.dot(grad, z - x)
+        d = z - x
+        lb = v + (grad @ d)
 
         # update the best lower bound
         if lb > best_lb:
@@ -80,7 +55,6 @@ def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 100
             break
 
         # line search for alpha
-        d = z - x
         alpha = ls.compute(x, d)
         x = x + alpha * d
 

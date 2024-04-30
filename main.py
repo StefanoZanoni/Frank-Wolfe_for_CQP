@@ -38,7 +38,7 @@ def solve(problem, constraints, x0, As, n):
         # consider only the subproblem relative to the indexes
         bcqp.problem.set_subproblem(indexes)
         # solve the subproblem
-        x_i, iteration = frank_wolfe(bcqp, x_init, eps=1e-6, max_iter=2000)
+        x_i, iteration = frank_wolfe(bcqp, x_init, eps=1e-6, max_iter=1000)
         # merge the subproblem solution with the optimal solution
         x_optimal[indexes] = x_i
         iterations.append(iteration)
@@ -57,7 +57,7 @@ def main():
     parser.add_argument('dimension', type=int, help='problem dimension', nargs='?', default=10)
     n = parser.parse_args().dimension
 
-    Is = create_index_sets(n, 3, uniform=False)
+    Is = create_index_sets(n, 3, uniform=True)
     As = [create_A(n, I) for I in Is]
     b = create_b()
 
