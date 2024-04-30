@@ -7,8 +7,9 @@ import sys
 
 def solve_LMO(grad: np.ndarray) -> np.ndarray:
     z = np.zeros_like(grad)
-    min_index = np.argmin(grad)
-    z[min_index] = 1
+    if sum(grad < 0) > 0:
+        min_index = np.argmin(grad)
+        z[min_index] = 1
     return z
 
 

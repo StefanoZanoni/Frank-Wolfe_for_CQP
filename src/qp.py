@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def generate_Q(dim: int, rank: int, eccentricity: float):
+def generate_Q(dim: int, rank: int, eccentricity: float) -> np.ndarray:
     """
     Generate a positive semi-definite matrix Q of size dim x dim.
 
@@ -25,7 +25,7 @@ def generate_Q(dim: int, rank: int, eccentricity: float):
     return Q
 
 
-def generate_q(dim: int, Q: np.ndarray, active: float):
+def generate_q(dim: int, Q: np.ndarray, active: float) -> np.ndarray:
     """
     Generates a random vector 'z' based on the given parameters and returns the dot product of '-Q' and 'z'.
 
@@ -106,7 +106,7 @@ class QP:
         else:
             self.c = 0
 
-    def evaluate(self, x):
+    def evaluate(self, x) -> float:
         """
         Evaluates the quadratic function at point x.
 
@@ -119,7 +119,7 @@ class QP:
         """
         return np.dot(np.dot(x, self.subQ), x) + np.dot(self.subq, x) + self.c
 
-    def derivative(self, x):
+    def derivative(self, x) -> np.ndarray:
         """
         Computes the derivative of the quadratic function at point x.
 

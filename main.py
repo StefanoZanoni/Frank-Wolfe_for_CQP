@@ -12,7 +12,7 @@ from src.qp import QP
 
 # The solve function solves the optimization problem for each constraint
 # and returns the optimal solution, execution time, and the number of iterations.
-def solve(problem, constraints, x0, As, n):
+def solve(problem, constraints, x0, As, n) -> tuple[np.ndarray, float, list]:
     """
     Solve the optimization problem for each constraint.
 

@@ -15,7 +15,7 @@ class LineSearch:
         self.f = f
 
     @abstractmethod
-    def compute(self, xk, pk):
+    def compute(self, xk: np.ndarray, pk: np.ndarray) -> float:
         """
         Abstract method to compute the line search.
         Must be implemented by subclasses.
@@ -36,7 +36,7 @@ class ExactLineSearch(LineSearch):
         """
         super().__init__(f)
 
-    def compute(self, xk, pk):
+    def compute(self, xk: np.ndarray, pk: np.ndarray) -> float:
         """
         Compute the exact line search.
         Alpha = -g^T p / p^T Q p.
@@ -69,7 +69,7 @@ class BackTrackingLineSearch(LineSearch):
         self.alpha = alpha
         self.tau = tau
 
-    def compute(self, xk, pk):
+    def compute(self, xk: np.ndarray, pk: np.ndarray) -> float:
         """
         Compute the backtracking line search.
         While f(xk + alpha * pk) >= f(xk),
@@ -100,7 +100,7 @@ class BackTrackingArmijoLineSearch(BackTrackingLineSearch):
         super().__init__(f, alpha, tau)
         self.beta = beta
 
-    def compute(self, xk, pk):
+    def compute(self, xk: np.ndarray, pk: np.ndarray) -> float:
         """
         Compute the backtracking line search with Armijo condition.
         While f(xk + alpha * pk) >= f(xk) + alpha * beta * g^T p,
@@ -137,7 +137,7 @@ class BackTrackingArmijoStrongWolfeLineSearch(BackTrackingArmijoLineSearch):
             np.random.seed(seed)
         self.sigma = np.random.uniform(self.beta, 1)
 
-    def compute(self, xk, pk):
+    def compute(self, xk: np.ndarray, pk: np.ndarray) -> float:
         """
         Compute the backtracking line search with Armijo and Strong Wolfe conditions.
         While f(xk + alpha * pk) >= f(xk) + alpha * beta * g^T p and |g(xk + alpha * pk)^T p| >= sigma |g(xk)^T p|,

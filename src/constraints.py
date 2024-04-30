@@ -67,8 +67,7 @@ class BoxConstraints(Constraints):
         super().__init__(A, b, ineq)
 
 
-
-def create_A(n: int, index_set: list):
+def create_A(n: int, index_set: list) -> np.ndarray:
     """
     Create a matrix A with specified dimensions and index set.
 
@@ -87,7 +86,7 @@ def create_A(n: int, index_set: list):
     return np.array(A)
 
 
-def create_b():
+def create_b() -> np.ndarray:
     """
     Creates and returns a numpy array representing the vector b.
 
