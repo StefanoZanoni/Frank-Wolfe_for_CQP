@@ -32,7 +32,7 @@ def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 100
     best_lb = -np.Inf
 
     # line search method
-    ls = BackTrackingArmijoStrongWolfeLineSearch(cqp.problem, alpha=1, tau=0.9, beta=1e-4, seed=5)
+    ls = BackTrackingArmijoStrongWolfeLineSearch(cqp.problem, alpha=1, tau=0.9, c1=1e-3)
 
     i = 0
     while i < max_iter:

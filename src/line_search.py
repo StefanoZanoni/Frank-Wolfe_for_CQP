@@ -66,7 +66,13 @@ class BackTrackingLineSearch(LineSearch):
         :param tau: The reduction factor (default is 0.5).
         """
         super().__init__(f)
+        if alpha <= 0 or alpha > 1:
+            print('The initial step size must be in the interval (0, 1). Defaulted to 1.')
+            alpha = 1
         self.alpha = alpha
+        if tau <= 0 or tau >= 1:
+            print('The reduction factor must be in the interval (0, 1). Defaulted to 0.5.')
+            tau = 0.5
         self.tau = tau
 
     def compute(self, xk: np.ndarray, pk: np.ndarray) -> float:
@@ -79,7 +85,7 @@ class BackTrackingLineSearch(LineSearch):
         :param pk: The search direction.
         :return: The step size alpha.
         """
-        while self.f.evaluate(xk + self.alpha * pk) >= self.f.evaluate(xk):
+        while self.f.evaluate(xk + self.alpha * pk) > self.f.evaluate(xk):
             self.alpha = self.alpha * self.tau
 
         return self.alpha
@@ -87,7 +93,7 @@ class BackTrackingLineSearch(LineSearch):
 
 # The BackTrackingArmijoLineSearch class implements the backtracking line search strategy with Armijo condition.
 class BackTrackingArmijoLineSearch(BackTrackingLineSearch):
-    def __init__(self, f: QP, alpha: float = 1, tau: float = 0.5, beta: float = 1e-4):
+    def __init__(self, f: QP, alpha: float = 1, tau: float = 0.5, c1: float = 1e-3):
         """
         Initialize the BackTrackingArmijoLineSearch with a QP function, an initial step size alpha,
         a reduction factor tau, and a beta factor for the Armijo condition.
@@ -95,10 +101,13 @@ class BackTrackingArmijoLineSearch(BackTrackingLineSearch):
         :param f: A QP function.
         :param alpha: The initial step size (default is 1).
         :param tau: The reduction factor (default is 0.5).
-        :param beta: The beta factor for the Armijo condition (default is 1e-4).
+        :param beta: The beta factor for the Armijo condition (default is 1e-3).
         """
         super().__init__(f, alpha, tau)
-        self.beta = beta
+        if c1 <= 0 or c1 >= 1:
+            print('The beta factor must be in the interval (0, 1). Defaulted to 1e-3.')
+            c1 = 1e-3
+        self.c1 = c1
 
     def compute(self, xk: np.ndarray, pk: np.ndarray) -> float:
         """
@@ -110,8 +119,8 @@ class BackTrackingArmijoLineSearch(BackTrackingLineSearch):
         :param pk: The search direction.
         :return: The step size alpha.
         """
-        while (self.f.evaluate(xk + self.alpha * pk) >=
-               self.f.evaluate(xk) + self.alpha * self.beta * np.dot(self.f.derivative(xk), pk)):
+        while (self.f.evaluate(xk + self.alpha * pk) >
+               self.f.evaluate(xk) + self.alpha * self.c1 * np.dot(pk, self.f.derivative(xk))):
             self.alpha = self.alpha * self.tau
 
         return self.alpha
@@ -120,7 +129,7 @@ class BackTrackingArmijoLineSearch(BackTrackingLineSearch):
 # The BackTrackingArmijoStrongWolfeLineSearch class implements the backtracking line search strategy
 # with Armijo and Strong Wolfe conditions.
 class BackTrackingArmijoStrongWolfeLineSearch(BackTrackingArmijoLineSearch):
-    def __init__(self, f: QP, alpha: float = 1, tau: float = 0.1, beta: float = 1e-4, seed: int = None):
+    def __init__(self, f: QP, alpha: float = 1, tau: float = 0.5, c1: float = 1e-3, seed: int = None):
         """
         Initialize the BackTrackingArmijoStrongWolfeLineSearch with a QP function, an initial step size alpha,
          a reduction factor tau, a beta factor for the Armijo condition,
@@ -128,14 +137,17 @@ class BackTrackingArmijoStrongWolfeLineSearch(BackTrackingArmijoLineSearch):
 
         :param f: A QP function.
         :param alpha: The initial step size (default is 1).
-        :param tau: The reduction factor (default is 0.1).
-        :param beta: The beta factor for the Armijo condition (default is 1e-4).
+        :param tau: The reduction factor (default is 0.5).
+        :param beta: The beta factor for the Armijo condition (default is 1e-3).
         :param seed: The seed for the random number generator (default is None).
         """
-        super().__init__(f, alpha, tau, beta)
+        super().__init__(f, alpha, tau, c1)
         if seed:
             np.random.seed(seed)
-        self.sigma = np.random.uniform(self.beta, 1)
+        self.c2 = np.random.uniform(self.c1, 1)
+        if self.c2 <= 0.01:
+            factor = 0.1 / self.c2
+            self.c2 = self.c2 * factor
 
     def compute(self, xk: np.ndarray, pk: np.ndarray) -> float:
         """
@@ -147,10 +159,10 @@ class BackTrackingArmijoStrongWolfeLineSearch(BackTrackingArmijoLineSearch):
         :param pk: The search direction.
         :return: The step size alpha.
         """
-        while (self.f.evaluate(xk + self.alpha * pk) >=
-               self.f.evaluate(xk) + self.beta * self.alpha * np.dot(self.f.derivative(xk), pk)) and (
-                np.abs(np.dot(self.f.derivative(xk * self.alpha * pk), pk)) >=
-                self.sigma * np.abs(np.dot(self.f.derivative(xk), pk))):
+        while (self.f.evaluate(xk + self.alpha * pk) >
+               self.f.evaluate(xk) + self.alpha * self.c1 * np.dot(pk, self.f.derivative(xk))) and (
+                np.abs(np.dot(pk, self.f.derivative(xk * self.alpha * pk))) >
+                self.c2 * np.abs(np.dot(pk, self.f.derivative(xk)))):
             self.alpha = self.alpha * self.tau
 
         return self.alpha
