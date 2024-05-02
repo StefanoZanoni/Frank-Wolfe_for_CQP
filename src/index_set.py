@@ -46,8 +46,7 @@ def create_index_sets(n: int, cardinality_K: int, uniform: bool = True, seed: in
     return Is
 
 
-def create_feasible_point(n: int, Is: list):
+def create_feasible_point(n: int):
     x = np.zeros(n)
-    for I in Is:
-        x[I] = 1 / len(I)
+    x[0] = 1
     return x

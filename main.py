@@ -57,13 +57,13 @@ def main():
     parser.add_argument('dimension', type=int, help='problem dimension', nargs='?', default=10)
     n = parser.parse_args().dimension
 
-    Is = create_index_sets(n, 3, uniform=True)
+    Is = create_index_sets(n, 3, uniform=False)
     As = [create_A(n, I) for I in Is]
     b = create_b()
 
     constraints = [BoxConstraints(A, b, ineq=True) for A in As]
     problem = QP(n, rank=n, eccentricity=0.9, active=1, c=False)
-    x0 = create_feasible_point(n, Is)
+    x0 = create_feasible_point(n)
 
     x_optimal, execution_time, iterations = solve(problem, constraints, x0, As, n)
     print(f'\nOptimal solution: {x_optimal}\n')
