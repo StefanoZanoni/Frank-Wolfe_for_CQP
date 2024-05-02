@@ -32,7 +32,7 @@ def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 100
     best_lb = -np.Inf
 
     # line search method
-    ls = BackTrackingLineSearch(cqp.problem)
+    ls = BackTrackingArmijoStrongWolfeLineSearch(cqp.problem, alpha=1, tau=0.9, beta=1e-4, seed=5)
 
     i = 0
     while i < max_iter:
@@ -52,7 +52,10 @@ def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 100
 
         gap = (v - best_lb) / max(np.abs(v), 1)
         if gap < eps:
-            print(f'Iteration {i}: status = optimal, v = {v}, gap = {gap}')
+            if gap == 0:
+                print(f'Iteration {i}: status = optimal, v = {v}, gap = {gap}')
+            else:
+                print(f'Iteration {i}: status = approximate, v = {v}, gap = {gap}')
             break
 
         # line search for alpha
