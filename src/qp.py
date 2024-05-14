@@ -13,19 +13,19 @@ def generate_Q(dim: int, rank: int, eccentricity: float) -> np.ndarray:
     Returns:
     Q (ndarray): The generated positive semi-definite matrix Q.
     """
-    A = np.random.uniform(-1, 1, (rank, dim))
+    A = np.random.rand(round(rank * dim), dim)
     Q = np.dot(A.T, A)
     V, D = np.linalg.eig(Q)
     if D[0, 0] > 1e-14:
         d = np.diag(D)
-        l = (d[0] * np.ones(dim) + (d[0] / (d[dim - 1] - d[0]))
+        l = (d[0] * np.ones((dim, 1)) + (d[0] / (d[dim - 1] - d[0]))
              * (2 * eccentricity / (1 - eccentricity))
-             * (d - d[0] * np.ones(dim)))
-        Q = V * np.diag(l) * V.T
+             * (d - d[0] * np.ones((dim, 1))))
+        Q = np.dot(np.dot(V, np.diag(l)), V.T)
     return Q
 
 
-def generate_q(dim: int, Q: np.ndarray, active: float) -> np.ndarray:
+def generate_q(dim: int, Q: np.ndarray, active: float, umin: float, umax: float) -> np.ndarray:
     """
     Generates a random vector 'z' based on the given parameters and returns the dot product of '-Q' and 'z'.
 
@@ -37,12 +37,12 @@ def generate_q(dim: int, Q: np.ndarray, active: float) -> np.ndarray:
     Returns:
     - np.ndarray: The result of the dot product between '-Q' and 'z'.
     """
+    u = umin * np.ones(dim) + (umax - umin) * np.random.rand(dim)
     z = np.zeros(dim)
     outb = np.random.rand(dim) <= active
     lr = np.random.rand(dim) <= 0.5
     l = outb & lr
     r = outb & ~lr
-    u = np.random.rand(dim)
     z[l] = -np.random.rand(np.sum(l)) * u[l]
     z[r] = (1 + np.random.rand(np.sum(r))) * u[r]
     outb = ~outb
@@ -83,8 +83,8 @@ class QP:
 
     """
 
-    def __init__(self, dim: int, rank: int = None, eccentricity: float = 0.9, active: float = 1, c: bool = False,
-                 seed: int = None):
+    def __init__(self, dim: int, rank: int = None, eccentricity: float = 0.9, active: float = 1,
+                 umin: float = 0, umax: float = 1, c: bool = False, seed: int = None):
         if dim < 1:
             raise ValueError("dim must be greater than 0")
         if rank is None:
@@ -99,7 +99,7 @@ class QP:
         self.dim = dim
         self.Q = generate_Q(dim, rank, eccentricity)
         self.subQ = self.Q
-        self.q = generate_q(dim, self.Q, active)
+        self.q = generate_q(dim, self.Q, active, umin, umax)
         self.subq = self.q
         if c:
             self.c = np.random.uniform(-1, 1)
