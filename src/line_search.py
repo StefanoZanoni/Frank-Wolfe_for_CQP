@@ -161,7 +161,7 @@ class BackTrackingArmijoStrongWolfeLineSearch(BackTrackingArmijoLineSearch):
         """
         while (self.f.evaluate(xk + self.alpha * pk) >
                self.f.evaluate(xk) + self.alpha * self.c1 * np.dot(pk, self.f.derivative(xk))) and (
-                np.abs(np.dot(pk, self.f.derivative(xk * self.alpha * pk))) >
+                np.abs(np.dot(pk, self.f.derivative(xk + self.alpha * pk))) >
                 self.c2 * np.abs(np.dot(pk, self.f.derivative(xk)))):
             self.alpha = self.alpha * self.tau
 
