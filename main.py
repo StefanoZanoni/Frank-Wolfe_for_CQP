@@ -2,7 +2,7 @@ import numpy as np
 import argparse
 import time
 
-from src.index_set import create_index_sets, create_feasible_point
+from src.index_set import create_index_sets
 from src.constraints import create_A, create_b
 from src.constraints import BoxConstraints
 from src.cqp import BCQP
@@ -12,13 +12,12 @@ from src.qp import QP
 
 # The solve function solves the optimization problem for each constraint
 # and returns the optimal solution, execution time, and the number of iterations.
-def solve(problem, constraints, x0, As, n) -> tuple[np.ndarray, float, list]:
+def solve(problem, constraints, As, n) -> tuple[np.ndarray, float, list]:
     """
     Solve the optimization problem for each constraint.
 
     :param problem: The optimization problem.
     :param constraints: The constraints of the problem.
-    :param x0: The initial point.
     :param As: The matrices of constraints.
     :param n: The dimension of the problem.
     :return: The optimal solution, execution time, and the number of iterations.
@@ -31,8 +30,9 @@ def solve(problem, constraints, x0, As, n) -> tuple[np.ndarray, float, list]:
         print(f'Sub problem {i}')
         # compute the indexes of k-th I index set
         indexes = As[i][0] != 0
-        # get the sub x_init relative to the indexes
-        x_init = x0[indexes]
+        # initialize the starting point
+        x_init = np.zeros(sum(indexes))
+        x_init[0] = 1
         # construct the BCQP problem from the actual constraints
         bcqp = BCQP(problem, c)
         # consider only the subproblem relative to the indexes
@@ -63,9 +63,8 @@ def main():
 
     constraints = [BoxConstraints(A, b, ineq=True) for A in As]
     problem = QP(n, rank=n, eccentricity=0.9, active=1, c=False)
-    x0 = create_feasible_point(n)
 
-    x_optimal, execution_time, iterations = solve(problem, constraints, x0, As, n)
+    x_optimal, execution_time, iterations = solve(problem, constraints, As, n)
     print(f'\nOptimal solution: {x_optimal}\n')
     print(f'Execution time: {round(execution_time * 1000, 4)}ms\n')
     print(f'Iterations for each subproblem: {iterations}')
