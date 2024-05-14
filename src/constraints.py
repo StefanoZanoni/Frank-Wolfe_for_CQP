@@ -21,13 +21,13 @@ class Constraints:
 
     """
 
-    def __init__(self, A: np.ndarray, b: np.ndarray, ineq: bool = True):
+    def __init__(self, A: np.ndarray, b: np.ndarray, ineq: bool = True) -> None:
         self.A = A
         self.b = b
         self.ineq = ineq
         self.num_constraints = len(b)
 
-    def evaluate(self, x):
+    def evaluate(self, x: np.ndarray) -> np.ndarray or bool:
         """
         Evaluates the constraints at a given point x.
 
@@ -60,7 +60,7 @@ class BoxConstraints(Constraints):
         ineq (bool, optional): Indicates whether the constraints are inequalities. Defaults to True.
     """
 
-    def __init__(self, A: np.ndarray, b: np.ndarray, ineq: bool = True):
+    def __init__(self, A: np.ndarray, b: np.ndarray, ineq: bool = True) -> None:
         self.box_min = np.min(b)
         self.box_max = np.max(b)
 

@@ -6,7 +6,7 @@ from src.qp import QP
 
 # The LineSearch class is an abstract base class that defines the interface for a line search strategy.
 class LineSearch:
-    def __init__(self, f: QP):
+    def __init__(self, f: QP) -> None:
         """
         Initialize the LineSearch with a quadratic problem (QP) function.
 
@@ -28,7 +28,7 @@ class LineSearch:
 
 # The ExactLineSearch class implements the exact line search strategy.
 class ExactLineSearch(LineSearch):
-    def __init__(self, f: QP):
+    def __init__(self, f: QP) -> None:
         """
         Initialize the ExactLineSearch with a QP function.
 
@@ -56,7 +56,7 @@ class ExactLineSearch(LineSearch):
 
 # The BackTrackingLineSearch class implements the backtracking line search strategy.
 class BackTrackingLineSearch(LineSearch):
-    def __init__(self, f: QP, alpha: float = 1, tau: float = 0.5):
+    def __init__(self, f: QP, alpha: float = 1, tau: float = 0.5) -> None:
         """
         Initialize the BackTrackingLineSearch with a QP function,
          an initial step size alpha, and a reduction factor tau.
@@ -93,7 +93,7 @@ class BackTrackingLineSearch(LineSearch):
 
 # The BackTrackingArmijoLineSearch class implements the backtracking line search strategy with Armijo condition.
 class BackTrackingArmijoLineSearch(BackTrackingLineSearch):
-    def __init__(self, f: QP, alpha: float = 1, tau: float = 0.5, c1: float = 1e-3):
+    def __init__(self, f: QP, alpha: float = 1, tau: float = 0.5, c1: float = 1e-3) -> None:
         """
         Initialize the BackTrackingArmijoLineSearch with a QP function, an initial step size alpha,
         a reduction factor tau, and a beta factor for the Armijo condition.
@@ -129,7 +129,7 @@ class BackTrackingArmijoLineSearch(BackTrackingLineSearch):
 # The BackTrackingArmijoStrongWolfeLineSearch class implements the backtracking line search strategy
 # with Armijo and Strong Wolfe conditions.
 class BackTrackingArmijoStrongWolfeLineSearch(BackTrackingArmijoLineSearch):
-    def __init__(self, f: QP, alpha: float = 1, tau: float = 0.5, c1: float = 1e-3, seed: int = None):
+    def __init__(self, f: QP, alpha: float = 1, tau: float = 0.5, c1: float = 1e-3, seed: int = None) -> None:
         """
         Initialize the BackTrackingArmijoStrongWolfeLineSearch with a QP function, an initial step size alpha,
          a reduction factor tau, a beta factor for the Armijo condition,

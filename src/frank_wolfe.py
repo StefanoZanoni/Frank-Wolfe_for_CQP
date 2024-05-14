@@ -14,7 +14,7 @@ def solve_LMO(grad: np.ndarray) -> np.ndarray:
 
 
 # The frank_wolfe function implements the Frank-Wolfe algorithm for solving convex optimization problems.
-def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 1000):
+def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 1000) -> tuple[np.ndarray, int]:
     """
     Implement the Frank-Wolfe algorithm for solving convex optimization problems.
 

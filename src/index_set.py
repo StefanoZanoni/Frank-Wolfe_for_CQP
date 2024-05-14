@@ -3,7 +3,7 @@ import random
 import numpy as np
 
 
-def create_index_sets(n: int, cardinality_K: int, uniform: bool = True, seed: int = None):
+def create_index_sets(n: int, cardinality_K: int, uniform: bool = True, seed: int = None) -> list:
     """
     Create index sets for a given number of elements.
 

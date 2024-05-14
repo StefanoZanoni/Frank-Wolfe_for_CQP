@@ -12,7 +12,7 @@ class CQP:
         constraints (Constraints): The constraints of the problem.
     """
 
-    def __init__(self, qp: QP, c: Constraints):
+    def __init__(self, qp: QP, c: Constraints) -> None:
         self.problem = qp
         self.constraints = c
 
@@ -28,5 +28,5 @@ class BCQP(CQP):
     - c (BoxConstraints): The box constraints object.
 
     """
-    def __init__(self, qp: QP, c: BoxConstraints):
+    def __init__(self, qp: QP, c: BoxConstraints) -> None:
         super().__init__(qp, c)

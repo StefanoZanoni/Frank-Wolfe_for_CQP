@@ -84,7 +84,7 @@ class QP:
     """
 
     def __init__(self, dim: int, rank: int = None, eccentricity: float = 0.9, active: float = 1,
-                 umin: float = 0, umax: float = 1, c: bool = False, seed: int = None):
+                 umin: float = 0, umax: float = 1, c: bool = False, seed: int = None) -> None:
         if dim < 1:
             raise ValueError("dim must be greater than 0")
         if rank is None:
@@ -106,7 +106,7 @@ class QP:
         else:
             self.c = 0
 
-    def evaluate(self, x) -> float:
+    def evaluate(self, x: np.ndarray) -> float:
         """
         Evaluates the quadratic function at point x.
 
@@ -119,7 +119,7 @@ class QP:
         """
         return np.dot(np.dot(x.T, self.subQ), x) + np.dot(self.subq.T, x) + self.c
 
-    def derivative(self, x) -> np.ndarray:
+    def derivative(self, x: np.ndarray) -> np.ndarray:
         """
         Computes the derivative of the quadratic function at point x.
 
@@ -132,13 +132,12 @@ class QP:
         """
         return 2 * np.dot(self.subQ, x) + self.subq
 
-    def set_subproblem(self, indexes):
+    def set_subproblem(self, indexes: list):
         """
         Sets the subproblem by selecting specific indexes.
 
         Args:
             indexes (ndarray): The indexes to select for the subproblem.
-
         """
         self.subQ = self.Q[indexes][:, indexes]
         self.subq = self.q[indexes]
