@@ -53,7 +53,7 @@ def generate_q(dim: int, Q: np.ndarray, active: float, umin: float, umax: float)
 
 class QP:
     """
-    Quadratic Programming (QP) class.
+    Quadratic Problem (QP) class.
 
     Args:
         dim (int): The dimension of the problem.
@@ -70,10 +70,10 @@ class QP:
 
     Attributes:
         dim (int): The dimension of the problem.
-        Q (ndarray): The quadratic matrix.
-        subQ (ndarray): The submatrix of Q.
-        q (ndarray): The linear term.
-        subq (ndarray): The subvector of q.
+        _Q (ndarray): The quadratic matrix.
+        _subQ (ndarray): The submatrix of Q.
+        _q (ndarray): The linear term.
+        _subq (ndarray): The subvector of q.
         c (float): The constant term.
 
     Methods:
@@ -97,14 +97,14 @@ class QP:
             np.random.seed(seed)
 
         self.dim = dim
-        self.Q = generate_Q(dim, rank, eccentricity)
-        self.subQ = self.Q
-        self.q = generate_q(dim, self.Q, active, umin, umax)
-        self.subq = self.q
+        self._Q = generate_Q(dim, rank, eccentricity)
+        self._subQ = self._Q
+        self._q = generate_q(dim, self._Q, active, umin, umax)
+        self._subq = self._q
         if c:
-            self.c = np.random.uniform(-1, 1)
+            self._c = np.random.uniform(0, 1)
         else:
-            self.c = 0
+            self._c = 0
 
     def evaluate(self, x: np.ndarray) -> float:
         """
@@ -117,7 +117,7 @@ class QP:
             float: The value of the quadratic function at point x.
 
         """
-        return np.dot(np.dot(x.T, self.subQ), x) + np.dot(self.subq.T, x) + self.c
+        return np.dot(np.dot(x.T, self._subQ), x) + np.dot(self._subq.T, x) + self._c
 
     def derivative(self, x: np.ndarray) -> np.ndarray:
         """
@@ -130,7 +130,7 @@ class QP:
             ndarray: The derivative of the quadratic function at point x.
 
         """
-        return 2 * np.dot(self.subQ, x) + self.subq
+        return 2 * np.dot(self._subQ, x) + self._subq
 
     def set_subproblem(self, indexes: list):
         """
@@ -139,5 +139,5 @@ class QP:
         Args:
             indexes (ndarray): The indexes to select for the subproblem.
         """
-        self.subQ = self.Q[indexes][:, indexes]
-        self.subq = self.q[indexes]
+        self._subQ = self._Q[indexes][:, indexes]
+        self._subq = self._q[indexes]

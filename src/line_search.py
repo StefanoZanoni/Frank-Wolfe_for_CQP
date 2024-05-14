@@ -45,7 +45,7 @@ class ExactLineSearch(LineSearch):
         :param pk: The search direction.
         :return: The step size alpha.
         """
-        den = np.dot(np.dot(pk.T, self.f.subQ), pk)
+        den = np.dot(np.dot(pk.T, self.f._subQ), pk)
         if den <= 1e-16:
             alpha = 1
         else:

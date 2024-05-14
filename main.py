@@ -37,7 +37,7 @@ def solve(problem: QP, constraints: list[BoxConstraints], As: list[np.ndarray], 
         # construct the BCQP problem from the actual constraints
         bcqp = BCQP(problem, c)
         # consider only the subproblem relative to the indexes
-        bcqp.problem.set_subproblem(indexes)
+        bcqp.set_subproblem(indexes)
         # solve the subproblem
         x_i, iteration = frank_wolfe(bcqp, x_init, eps=1e-6, max_iter=1000)
         # merge the subproblem solution with the optimal solution

@@ -23,6 +23,7 @@ class Constraints:
 
     def __init__(self, A: np.ndarray, b: np.ndarray, ineq: bool = True) -> None:
         self.A = A
+        self._subA = A
         self.b = b
         self.ineq = ineq
         self.num_constraints = len(b)
@@ -41,9 +42,19 @@ class Constraints:
 
         """
         if self.ineq:
-            return np.dot(self.A, x) - self.b <= 0
+            return np.dot(self._subA, x) - self.b <= 0
         else:
-            return np.dot(self.A, x) - self.b == 0
+            return np.dot(self._subA, x) - self.b == 0
+
+    def set_subproblem(self, indexes: np.ndarray) -> None:
+        """
+            Sets the subproblem by selecting specific indexes.
+
+            Parameters:
+            - indexes (np.ndarray): The indexes to select.
+
+            """
+        self._subA = self.A[:, indexes]
 
 
 class BoxConstraints(Constraints):

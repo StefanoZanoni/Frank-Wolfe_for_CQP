@@ -61,6 +61,9 @@ def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 100
         # line search for alpha
         alpha = ls.compute(x, d)
         x = x + alpha * d
+        if not cqp.constraints.evaluate(x).all():
+            print('The constraints are not satisfied.')
+            sys.exit(1)
 
         if i + 1 >= max_iter:
             print(f'Iteration {i}: status = stopped, v = {v}, gap = {gap}')
