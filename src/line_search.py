@@ -45,11 +45,11 @@ class ExactLineSearch(LineSearch):
         :param pk: The search direction.
         :return: The step size alpha.
         """
-        den = np.dot(np.dot(pk, self.f.subQ), pk)
+        den = np.dot(np.dot(pk.T, self.f.subQ), pk)
         if den <= 1e-16:
             alpha = 1
         else:
-            alpha = min(np.dot(-self.f.derivative(xk), pk) / den, 1)
+            alpha = min(np.dot(-self.f.derivative(xk).T, pk) / den, 1)
 
         return alpha
 
@@ -120,7 +120,7 @@ class BackTrackingArmijoLineSearch(BackTrackingLineSearch):
         :return: The step size alpha.
         """
         while (self.f.evaluate(xk + self.alpha * pk) >
-               self.f.evaluate(xk) + self.alpha * self.c1 * np.dot(pk, self.f.derivative(xk))):
+               self.f.evaluate(xk) + self.alpha * self.c1 * np.dot(pk.T, self.f.derivative(xk))):
             self.alpha = self.alpha * self.tau
 
         return self.alpha
@@ -159,10 +159,11 @@ class BackTrackingArmijoStrongWolfeLineSearch(BackTrackingArmijoLineSearch):
         :param pk: The search direction.
         :return: The step size alpha.
         """
+        temp = self.c2 * np.abs(np.dot(pk.T, self.f.evaluate(xk)))
         while (self.f.evaluate(xk + self.alpha * pk) >
-               self.f.evaluate(xk) + self.alpha * self.c1 * np.dot(pk, self.f.derivative(xk))) and (
+               self.f.evaluate(xk) + self.alpha * self.c1 * np.dot(pk.T, self.f.derivative(xk))) and (
                 np.abs(np.dot(pk, self.f.derivative(xk + self.alpha * pk))) >
-                self.c2 * np.abs(np.dot(pk, self.f.derivative(xk)))):
+                self.c2 * np.abs(np.dot(pk.T, self.f.evaluate(xk)))):
             self.alpha = self.alpha * self.tau
 
         return self.alpha

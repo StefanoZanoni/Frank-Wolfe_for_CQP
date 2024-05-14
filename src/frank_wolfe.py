@@ -32,7 +32,7 @@ def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 100
     best_lb = -np.Inf
 
     # line search method
-    ls = BackTrackingArmijoStrongWolfeLineSearch(cqp.problem, alpha=1, tau=0.9, c1=1e-3)
+    ls = BackTrackingArmijoLineSearch(cqp.problem, alpha=1, tau=0.9)
 
     i = 0
     while i < max_iter:
@@ -44,7 +44,7 @@ def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 100
 
         # first order model evaluation
         d = z - x
-        lb = v + (grad @ d)
+        lb = v + np.dot(grad.T, d)
 
         # update the best lower bound
         if lb > best_lb:

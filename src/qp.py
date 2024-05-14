@@ -18,10 +18,10 @@ def generate_Q(dim: int, rank: int, eccentricity: float) -> np.ndarray:
     V, D = np.linalg.eig(Q)
     if D[0, 0] > 1e-14:
         d = np.diag(D)
-        l = (d[0] * np.ones((dim, 1)) + (d[0] / (d[dim - 1] - d[0]))
+        l = (d[0] * np.ones(dim) + (d[0] / (d[dim - 1] - d[0]))
              * (2 * eccentricity / (1 - eccentricity))
-             * (d - d[0] * np.ones((dim, 1))))
-        Q = np.dot(np.dot(V, np.diag(l)), V.T)
+             * (d - d[0] * np.ones(dim)))
+        Q = np.dot(np.dot(V, np.diag(l)).reshape(-1, 1), V.T.reshape(1, -1))
     return Q
 
 
@@ -117,7 +117,7 @@ class QP:
             float: The value of the quadratic function at point x.
 
         """
-        return np.dot(np.dot(x, self.subQ), x) + np.dot(self.subq, x) + self.c
+        return np.dot(np.dot(x.T, self.subQ), x) + np.dot(self.subq.T, x) + self.c
 
     def derivative(self, x) -> np.ndarray:
         """
