@@ -23,12 +23,12 @@ def solve(problem, constraints, x0, As, n) -> tuple[np.ndarray, float, list]:
     :param n: The dimension of the problem.
     :return: The optimal solution, execution time, and the number of iterations.
     """
-    x_optimal = np.zeros(n)
+    x_optimal = np.empty(n)
     iterations = []
 
     start = time.time()
     for i, c in enumerate(constraints):
-        print(f'Subproblem {i}')
+        print(f'Sub problem {i}')
         # compute the indexes of k-th I index set
         indexes = As[i][0] != 0
         # get the sub x_init relative to the indexes

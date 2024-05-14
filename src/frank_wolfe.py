@@ -55,7 +55,7 @@ def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 100
             if gap == 0:
                 print(f'Iteration {i}: status = optimal, v = {v}, gap = {gap}')
             else:
-                print(f'Iteration {i}: status = approximate, v = {v}, gap = {gap}')
+                print(f'Iteration {i}: status = approximated, v = {v}, gap = {gap}')
             break
 
         # line search for alpha
