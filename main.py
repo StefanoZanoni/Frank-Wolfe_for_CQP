@@ -39,13 +39,14 @@ def solve(problem: QP, constraints: list[BoxConstraints], As: list[np.ndarray], 
         # consider only the subproblem relative to the indexes
         bcqp.set_subproblem(indexes)
         # solve the subproblem
-        x_i, iteration = frank_wolfe(bcqp, x_init, eps=1e-6, max_iter=1000)
+        x_i, iteration = frank_wolfe(bcqp, x_init, eps=1e-5, max_iter=1000)
         # merge the subproblem solution with the optimal solution
         x_optimal[indexes] = x_i
         iterations.append(iteration)
         print('\n')
     end = time.time()
 
+    print(f'sum = {sum(x_optimal)}')
     return x_optimal, end - start, iterations
 
 

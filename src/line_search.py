@@ -119,7 +119,7 @@ class BackTrackingArmijoLineSearch(BackTrackingLineSearch):
         :param pk: The search direction.
         :return: The step size alpha.
         """
-        while (self.f.evaluate(xk + self.alpha * pk) >
+        while (self.f.evaluate(xk + self.alpha * pk) >=
                self.f.evaluate(xk) + self.alpha * self.c1 * np.dot(pk.T, self.f.derivative(xk))):
             self.alpha = self.alpha * self.tau
 
@@ -144,7 +144,7 @@ class BackTrackingArmijoStrongWolfeLineSearch(BackTrackingArmijoLineSearch):
         super().__init__(f, alpha, tau, c1)
         if seed:
             np.random.seed(seed)
-        self.c2 = np.random.uniform(self.c1, 1)
+        self.c2 = np.random.uniform(self.c1 + 1e-6, 1)
         if self.c2 <= 0.01:
             factor = 0.1 / self.c2
             self.c2 = self.c2 * factor
@@ -159,11 +159,10 @@ class BackTrackingArmijoStrongWolfeLineSearch(BackTrackingArmijoLineSearch):
         :param pk: The search direction.
         :return: The step size alpha.
         """
-        temp = self.c2 * np.abs(np.dot(pk.T, self.f.evaluate(xk)))
-        while (self.f.evaluate(xk + self.alpha * pk) >
+        while (self.f.evaluate(xk + self.alpha * pk) >=
                self.f.evaluate(xk) + self.alpha * self.c1 * np.dot(pk.T, self.f.derivative(xk))) and (
-                np.abs(np.dot(pk, self.f.derivative(xk + self.alpha * pk))) >
-                self.c2 * np.abs(np.dot(pk.T, self.f.evaluate(xk)))):
+                np.abs(np.dot(pk.T, self.f.derivative(xk + self.alpha * pk))) >=
+                self.c2 * np.abs(np.dot(pk.T, self.f.derivative(xk)))):
             self.alpha = self.alpha * self.tau
 
         return self.alpha

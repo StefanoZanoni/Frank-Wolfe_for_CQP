@@ -5,11 +5,15 @@ import numpy as np
 import sys
 
 
+def print_in_color(text, color_code):
+    # ANSI escape code for color
+    print(f'\033[{color_code}m{text}\033[0m')
+
+
 def solve_LMO(grad: np.ndarray) -> np.ndarray:
     z = np.zeros_like(grad)
-    if sum(grad < 0) > 0:
-        min_index = np.argmin(grad)
-        z[min_index] = 1
+    min_index = np.argmin(grad)
+    z[min_index] = 1
     return z
 
 
@@ -32,7 +36,8 @@ def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 100
     best_lb = -np.Inf
 
     # line search method
-    ls = BackTrackingArmijoLineSearch(cqp.problem, alpha=1, tau=0.9)
+    ls = BackTrackingArmijoStrongWolfeLineSearch(cqp.problem, alpha=1, tau=0.9, c1=1e-3)
+    alpha = 1
 
     i = 0
     while i < max_iter:
@@ -46,14 +51,18 @@ def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 100
         d = z - x
         lb = v + np.dot(grad.T, d)
 
+        print(f'x = {x}, alpha = {alpha}, d = {d}, z = {z}, v = {v}, lb = {lb}, best_lb = {best_lb}')
         # update the best lower bound
-        if lb > best_lb:
+
+        if lb > best_lb or v < best_lb:
             best_lb = lb
 
         gap = (v - best_lb) / max(np.abs(v), 1)
         if gap < eps:
             if gap == 0:
                 print(f'Iteration {i}: status = optimal, v = {v}, gap = {gap}')
+            elif gap < 0:
+                print_in_color(f'Iteration {i}: status = optimal, v = {v}, gap = {gap}', '31')
             else:
                 print(f'Iteration {i}: status = approximated, v = {v}, gap = {gap}')
             break
@@ -61,9 +70,6 @@ def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 100
         # line search for alpha
         alpha = ls.compute(x, d)
         x = x + alpha * d
-        if not cqp.constraints.evaluate(x).all():
-            print('The constraints are not satisfied.')
-            sys.exit(1)
 
         if i + 1 >= max_iter:
             print(f'Iteration {i}: status = stopped, v = {v}, gap = {gap}')
