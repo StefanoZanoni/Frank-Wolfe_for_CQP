@@ -90,9 +90,10 @@ def create_A(n: int, index_set: list) -> np.ndarray:
     - A (numpy.ndarray): The created matrix A.
 
     """
-    A = [[0 for _ in range(n)], [-1 for _ in range(n)]]
+    A = [[0 for _ in range(n)], [0 for _ in range(n)]]
     for i in index_set:
         A[0][i] = 1
+        A[1][i] = -1
 
     return np.array(A)
 
@@ -104,4 +105,4 @@ def create_b() -> np.ndarray:
     Returns:
     np.array: The vector b.
     """
-    return np.array([1, 0])
+    return np.array([1, -1])
