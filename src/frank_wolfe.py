@@ -37,7 +37,6 @@ def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 100
 
     # line search method
     ls = ExactLineSearch(cqp.problem)
-    alpha = 1
 
     i = 0
     while i < max_iter:
