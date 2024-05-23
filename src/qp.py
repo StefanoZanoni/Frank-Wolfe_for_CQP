@@ -141,3 +141,9 @@ class QP:
         """
         self._subQ = self._Q[indexes][:, indexes]
         self._subq = self._q[indexes]
+
+    def get_Q(self):
+        return self._subQ
+
+    def get_q(self):
+        return self._subQ

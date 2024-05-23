@@ -45,7 +45,8 @@ class ExactLineSearch(LineSearch):
         :param pk: The search direction.
         :return: The step size alpha.
         """
-        den = np.dot(np.dot(pk.T, self.f._subQ), pk)
+
+        den = np.dot(np.dot(pk.T, self.f.get_Q()), pk)
         if den <= 1e-16:
             alpha = 1
         else:
@@ -96,12 +97,12 @@ class BackTrackingArmijoLineSearch(BackTrackingLineSearch):
     def __init__(self, f: QP, alpha: float = 1, tau: float = 0.5, c1: float = 1e-3) -> None:
         """
         Initialize the BackTrackingArmijoLineSearch with a QP function, an initial step size alpha,
-        a reduction factor tau, and a beta factor for the Armijo condition.
+        a reduction factor tau, and a c1 factor for the Armijo condition.
 
         :param f: A QP function.
         :param alpha: The initial step size (default is 1).
         :param tau: The reduction factor (default is 0.5).
-        :param beta: The beta factor for the Armijo condition (default is 1e-3).
+        :param c1: The c1 factor for the Armijo condition (default is 1e-3).
         """
         super().__init__(f, alpha, tau)
         if c1 <= 0 or c1 >= 1:
@@ -112,7 +113,7 @@ class BackTrackingArmijoLineSearch(BackTrackingLineSearch):
     def compute(self, xk: np.ndarray, pk: np.ndarray) -> float:
         """
         Compute the backtracking line search with Armijo condition.
-        While f(xk + alpha * pk) >= f(xk) + alpha * beta * g^T p,
+        While f(xk + alpha * pk) >= f(xk) + alpha * c1 * g^T p,
          alpha = tau * alpha.
 
         :param xk: The current point.
@@ -138,7 +139,7 @@ class BackTrackingArmijoStrongWolfeLineSearch(BackTrackingArmijoLineSearch):
         :param f: A QP function.
         :param alpha: The initial step size (default is 1).
         :param tau: The reduction factor (default is 0.5).
-        :param beta: The beta factor for the Armijo condition (default is 1e-3).
+        :param c1: The c1 factor for the Armijo condition (default is 1e-3).
         :param seed: The seed for the random number generator (default is None).
         """
         super().__init__(f, alpha, tau, c1)
@@ -152,7 +153,7 @@ class BackTrackingArmijoStrongWolfeLineSearch(BackTrackingArmijoLineSearch):
     def compute(self, xk: np.ndarray, pk: np.ndarray) -> float:
         """
         Compute the backtracking line search with Armijo and Strong Wolfe conditions.
-        While f(xk + alpha * pk) >= f(xk) + alpha * beta * g^T p and |g(xk + alpha * pk)^T p| >= sigma |g(xk)^T p|,
+        While f(xk + alpha * pk) >= f(xk) + alpha * c1 * g^T p and |g(xk + alpha * pk)^T p| >= c2 |g(xk)^T p|,
             alpha = tau * alpha.
 
         :param xk: The current point.

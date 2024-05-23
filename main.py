@@ -46,7 +46,6 @@ def solve(problem: QP, constraints: list[BoxConstraints], As: list[np.ndarray], 
         print('\n')
     end = time.time()
 
-    print(f'sum = {sum(x_optimal)}')
     return x_optimal, end - start, iterations
 
 
