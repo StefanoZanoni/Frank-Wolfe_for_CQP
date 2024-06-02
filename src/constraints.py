@@ -42,9 +42,9 @@ class Constraints:
 
         """
         if self.ineq:
-            return (np.dot(self._subA, x) <= self.b + 1e-6).all()
+            return (np.dot(self._subA, x) <= self.b + 1e-8).all()
         else:
-            return (np.dot(self._subA, x) == self.b + 1e-6).all()
+            return (np.dot(self._subA, x) == self.b + 1e-8).all()
 
     def set_subproblem(self, indexes: np.ndarray) -> None:
         """

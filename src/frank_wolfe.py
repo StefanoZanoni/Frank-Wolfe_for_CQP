@@ -5,11 +5,6 @@ import numpy as np
 import sys
 
 
-def print_in_color(text, color_code):
-    # ANSI escape code for color
-    print(f'\033[{color_code}m{text}\033[0m')
-
-
 def solve_LMO(grad: np.ndarray) -> np.ndarray:
     z = np.zeros_like(grad)
     min_index = np.argmin(grad)
@@ -57,9 +52,7 @@ def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 100
         gap = (v - best_lb) / max(np.abs(v), 1)
         if gap < eps:
             if gap == 0:
-                print(f'Iteration {i}: status = optimal, v = {v}, gap = {gap}')
-            elif gap < 0:
-                print_in_color(f'Iteration {i}: status = optimal, v = {v}, gap = {gap}', '31')
+                print(f'Iteration {i}: status = optimal, v = {v}, gap = {0}')
             else:
                 print(f'Iteration {i}: status = approximated, v = {v}, gap = {gap}')
             break

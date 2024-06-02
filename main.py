@@ -12,7 +12,7 @@ from src.qp import QP
 
 # The solve function solves the optimization problem for each constraint
 # and returns the optimal solution, execution time, and the number of iterations.
-def solve(problem: QP, constraints: list[BoxConstraints], As: list[np.ndarray], n: int) ->\
+def solve(problem: QP, constraints: list[BoxConstraints], As: list[np.ndarray], n: int) -> \
         tuple[np.ndarray, float, list]:
     """
     Solve the optimization problem for each constraint.
@@ -69,7 +69,7 @@ def main():
     print(f'\nOptimal solution: {x_optimal}\n')
     print(f'Execution time: {round(execution_time * 1000, 4)}ms\n')
     print(f'Iterations for each subproblem: {iterations}')
-    print(f'sum of x_optimal: {sum(x_optimal)}')
+
 
 if __name__ == '__main__':
     main()
