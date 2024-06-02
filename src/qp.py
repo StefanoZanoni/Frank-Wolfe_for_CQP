@@ -117,7 +117,7 @@ class QP:
             float: The value of the quadratic function at point x.
 
         """
-        return np.dot(np.dot(x.T, self._subQ), x) + np.dot(self._subq.T, x) + self._c
+        return (np.dot(np.dot(x.T, self._subQ), x)/2) + np.dot(self._subq.T, x) + self._c
 
     def derivative(self, x: np.ndarray) -> np.ndarray:
         """
