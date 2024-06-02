@@ -59,7 +59,7 @@ class QP:
         dim (int): The dimension of the problem.
         rank (int, optional): The rank of the problem. Defaults to None.
         eccentricity (float, optional): The eccentricity of the problem. Defaults to 0.9.
-        active (float, optional): The activity level of the problem. Defaults to 1.
+        active (float, optional): The percentage of active constraints. Defaults to 1.
         c (bool, optional): Whether to include a random constant term. Defaults to False.
         seed (int, optional): The seed for the random number generator. Defaults to None.
 
@@ -73,14 +73,15 @@ class QP:
         _Q (ndarray): The quadratic matrix.
         _subQ (ndarray): The submatrix of Q.
         _q (ndarray): The linear term.
-        _subq (ndarray): The subvector of q.
+        _subq (ndarray): The sub vector of q.
         c (float): The constant term.
 
     Methods:
         evaluate(x): Evaluate the quadratic function at point x.
         derivative(x): Computes the derivative of the quadratic function at point x.
         set_subproblem(indexes): Sets the subproblem by selecting specific indexes.
-
+        get_Q(): Returns the submatrix of Q.
+        get_q(): Returns the sub vector of q.
     """
 
     def __init__(self, dim: int, rank: int = None, eccentricity: float = 0.9, active: float = 1,
