@@ -130,7 +130,7 @@ class QP:
             ndarray: The derivative of the quadratic function at point x.
 
         """
-        return 2 * np.dot(self._subQ, x) + self._subq
+        return np.dot(self._subQ, x) + self._subq
 
     def set_subproblem(self, indexes: list):
         """

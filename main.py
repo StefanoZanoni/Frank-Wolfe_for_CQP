@@ -69,7 +69,7 @@ def main():
     print(f'\nOptimal solution: {x_optimal}\n')
     print(f'Execution time: {round(execution_time * 1000, 4)}ms\n')
     print(f'Iterations for each subproblem: {iterations}')
-
+    print(f'sum of x_optimal: {sum(x_optimal)}')
 
 if __name__ == '__main__':
     main()
