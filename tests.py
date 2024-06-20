@@ -49,6 +49,8 @@ def test():
     # general tests
     print('General tests\n')
 
+    iterations_number = 0
+    iteration_limit_number = 0
     for n in tqdm(test_dimensions):
         Is = create_index_sets(n, uniform=False)
         As = [create_A(n, I) for I in Is]
@@ -62,9 +64,14 @@ def test():
         problem = QP(n, rank=rank, eccentricity=eccentricity, active=active, c=False)
 
         _, execution_time, iterations, all_gaps = solve(problem, constraints, As, n, verbose=0)
+        iterations_number += len(iterations)
+        iteration_limit_number += iterations.count(1000)
         store_results({'execution_time': execution_time, 'iterations': iterations, 'all_gaps': all_gaps,
                        'dimensions': n, 'rank': rank, 'eccentricity': eccentricity, 'active': active},
                       f'tests/dimension_{n}')
+    max_iterations_percentage = round(iteration_limit_number / iterations_number, 3) * 100
+    with open(f'tests/iterations.json', 'w') as f:
+        json.dump({'max_iteration_percentage': max_iterations_percentage}, f)
 
     print('General tests done\n')
 
@@ -86,7 +93,7 @@ def test():
 
         execution_times = []
         for _ in range(1000):
-            _, execution_time, _, _ = solve(problem, constraints, As, n, verbose=0)
+            _, execution_time, iterations, _ = solve(problem, constraints, As, n, verbose=0)
             execution_times.append(execution_time)
         mean = round(np.mean(execution_times) * 1000, 5)
         std = round(np.std(execution_times) * 1000, 5)

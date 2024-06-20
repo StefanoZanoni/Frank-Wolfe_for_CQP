@@ -59,7 +59,7 @@ def solve(problem: QP, constraints: list[BoxConstraints], As: list[np.ndarray], 
 def main():
     parser = argparse.ArgumentParser(description='This is a program to solve optimization problems using the '
                                                  'Frank-Wolfe algorithm.')
-    parser.add_argument( '--dimensions', '-n',
+    parser.add_argument('--dimensions', '-n',
                         type=int,
                         default=10,
                         help='The dimension of the problem. Default is 10.')
@@ -101,7 +101,6 @@ def main():
     print(f"Execution Time: {round(execution_time * 1000, 4)} ms")
     print(f"Iterations for each sub-problem: {iterations}")
     print(f'Optimal solution: {solution}')
-    
 
 
 if __name__ == '__main__':
