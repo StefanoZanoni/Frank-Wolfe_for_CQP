@@ -21,3 +21,10 @@ or
 python3 main.py [-h/--help]
 ```
 To get the help message.
+
+## Running the tests
+
+To run the tests, use the following command:
+```bash
+python3 tests.py
+```
