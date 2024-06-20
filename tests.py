@@ -46,6 +46,9 @@ def test():
         if not os.path.exists(f'tests/dimension_{n}'):
             os.makedirs(f'tests/dimension_{n}')
 
+    # general tests
+    print('General tests\n')
+
     for n in tqdm(test_dimensions):
         Is = create_index_sets(n, uniform=False)
         As = [create_A(n, I) for I in Is]
@@ -53,15 +56,45 @@ def test():
 
         constraints = [BoxConstraints(A, b, ineq=True) for A in As]
 
-        eccentricity = np.random.uniform(0.1, 1)
+        eccentricity = round(np.random.uniform(0.1, 1), 4)
         rank = np.random.randint(1, n + 1)
-        active = np.random.uniform(0.1, 1)
+        active = round(np.random.uniform(0.1, 1), 1)
         problem = QP(n, rank=rank, eccentricity=eccentricity, active=active, c=False)
 
         _, execution_time, iterations, all_gaps = solve(problem, constraints, As, n, verbose=0)
         store_results({'execution_time': execution_time, 'iterations': iterations, 'all_gaps': all_gaps,
                        'dimensions': n, 'rank': rank, 'eccentricity': eccentricity, 'active': active},
                       f'tests/dimension_{n}')
+
+    print('General tests done\n')
+
+    # mean execution time per dimension
+    print('Test execution time statistics\n')
+
+    test_dimensions = [10, 500, 1000]
+    for n in tqdm(test_dimensions):
+        Is = create_index_sets(n, uniform=False)
+        As = [create_A(n, I) for I in Is]
+        b = create_b()
+
+        constraints = [BoxConstraints(A, b, ineq=True) for A in As]
+
+        eccentricity = round(np.random.uniform(0.1, 1), 4)
+        rank = np.random.randint(1, n + 1)
+        active = round(np.random.uniform(0.1, 1), 1)
+        problem = QP(n, rank=rank, eccentricity=eccentricity, active=active, c=False)
+
+        execution_times = []
+        for _ in range(1000):
+            _, execution_time, _, _ = solve(problem, constraints, As, n, verbose=0)
+            execution_times.append(execution_time)
+        mean = round(np.mean(execution_times) * 1000, 5)
+        std = round(np.std(execution_times) * 1000, 5)
+
+        with open(f'tests/statistics_{n}.json', 'w') as f:
+            json.dump({'mean_execution_time': mean, 'standard_deviation': std}, f)
+
+    print('Test execution time statistics done\n')
 
 
 if __name__ == '__main__':

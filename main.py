@@ -59,29 +59,29 @@ def solve(problem: QP, constraints: list[BoxConstraints], As: list[np.ndarray], 
 def main():
     parser = argparse.ArgumentParser(description='This is a program to solve optimization problems using the '
                                                  'Frank-Wolfe algorithm.')
-    parser.add_argument('-n', '--dimensions',
+    parser.add_argument( '--dimensions', '-n',
                         type=int,
                         default=10,
                         help='The dimension of the problem. Default is 10.')
-    parser.add_argument('-r', '--rank',
+    parser.add_argument('--rank', '-r',
                         type=int,
                         default=10,
                         help='The rank of the matrix Q. Default is 10.')
-    parser.add_argument('-e', '--eccentricity',
+    parser.add_argument('--eccentricity', '-e',
                         type=float,
                         default=0.9,
                         help='The eccentricity of the matrix Q. Default is 0.9.')
-    parser.add_argument('-a', '--active',
+    parser.add_argument('--active', '-a',
                         type=float,
                         default=1.0,
                         help='The active constraints percentage of the problem. Default is 1.0.')
-    parser.add_argument('-v', '--verbose',
+    parser.add_argument('--verbose', '-v',
                         type=int,
                         default=1,
                         help='The verbosity level. Default is 1.')
     args = parser.parse_args()
 
-    n = args.n
+    n = args.dimensions
     rank = args.rank
     eccentricity = args.eccentricity
     active = args.active
@@ -98,7 +98,7 @@ def main():
 
     _, execution_time, iterations, _ = solve(problem, constraints, As, n, verbose=verbose)
 
-    print(f"Execution Time: {execution_time * 1000} ms")
+    print(f"Execution Time: {round(execution_time * 1000, 4)} ms")
     print(f"Iterations for each sub-problem: {iterations}")
 
 
