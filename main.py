@@ -96,11 +96,12 @@ def main():
 
         eccentricity = np.random.uniform(0.1, 1)
         rank = np.random.randint(1, n + 1)
-        problem = QP(n, rank=rank, eccentricity=eccentricity, active=1, c=False)
+        active = np.random.uniform(0.1, 1)
+        problem = QP(n, rank=rank, eccentricity=eccentricity, active=active, c=False)
 
         _, execution_time, iterations, all_gaps = solve(problem, constraints, As, n, verbose=0)
         store_results({'execution_time': execution_time, 'iterations': iterations, 'all_gaps': all_gaps,
-                       'dimensions': n, 'rank': rank, 'eccentricity': eccentricity, 'active': 1},
+                       'dimensions': n, 'rank': rank, 'eccentricity': eccentricity, 'active': active},
                       f'tests/dimension_{n}')
 
 
