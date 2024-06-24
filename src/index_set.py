@@ -21,8 +21,10 @@ def create_index_sets(n: int, cardinality_K: int = 1, uniform: bool = True, seed
         list: A list of index sets, where each index set is represented as a list of integers.
 
     """
+
     if seed:
         random.seed(seed)
+
     ks = set(np.arange(n))
     Is = []
     if uniform:
@@ -46,4 +48,8 @@ def create_index_sets(n: int, cardinality_K: int = 1, uniform: bool = True, seed
             I = random.sample(list(ks), cardinality)
             ks -= set(I)
             Is.append(I)
+
+    if seed:
+        random.seed()
+
     return Is

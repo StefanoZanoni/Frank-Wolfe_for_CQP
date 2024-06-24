@@ -107,6 +107,9 @@ class QP:
         else:
             self._c = 0
 
+        if seed:
+            np.random.seed()
+
     def evaluate(self, x: np.ndarray) -> float:
         """
         Evaluates the quadratic function at point x.
