@@ -48,11 +48,12 @@ def main():
     constraints = [BoxConstraints(A, b, ineq=True) for A in As]
     problem = QP(n, rank=rank, eccentricity=eccentricity, active=active, c=False)
 
-    solution, execution_time, iterations, _, _ = solve(problem, constraints, As, n, verbose=verbose)
+    solution, execution_time, iterations, _, _, optimal_minimums = solve(problem, constraints, As, n, verbose=verbose)
 
     print(f"Execution Time: {round(execution_time * 1000, 4)} ms")
     print(f"Iterations for each sub-problem: {iterations}")
-    print(f'Optimal solution: {solution}')
+    print(f'Founded solution: {solution}')
+    print(f'Optimal minimums: {optimal_minimums}')
 
 
 if __name__ == '__main__':

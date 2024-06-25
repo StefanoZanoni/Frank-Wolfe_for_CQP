@@ -8,7 +8,7 @@ from src.constraints import BoxConstraints
 
 
 def solve(problem: QP, constraints: list[BoxConstraints], As: list[np.ndarray], n: int, verbose: int = 1) -> \
-        tuple[np.ndarray, float, list, list[list], list[list]]:
+        tuple[np.ndarray, float, list, list[list], list[list], list[float]]:
     """
     Solve the optimization problem for each index set.
 
@@ -23,6 +23,7 @@ def solve(problem: QP, constraints: list[BoxConstraints], As: list[np.ndarray], 
     iterations = []
     all_gaps = []
     all_convergence_rates = []
+    optimal_minimums = []
 
     start = time.time()
     for i, c in enumerate(constraints):
@@ -44,8 +45,9 @@ def solve(problem: QP, constraints: list[BoxConstraints], As: list[np.ndarray], 
         iterations.append(iteration)
         all_gaps.append(gaps)
         all_convergence_rates.append(convergence_rates)
+        optimal_minimums.append(bcqp.problem.minimum())
         if verbose == 1:
             print('\n')
     end = time.time()
 
-    return x_optimal, end - start, iterations, all_gaps, all_convergence_rates
+    return x_optimal, end - start, iterations, all_gaps, all_convergence_rates, optimal_minimums
