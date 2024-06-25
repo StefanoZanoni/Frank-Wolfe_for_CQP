@@ -6,7 +6,6 @@ import json
 import multiprocessing
 import matplotlib.pyplot as plt
 from tqdm import tqdm
-from math import log
 
 from src.index_set import create_index_sets
 from src.constraints import create_A, create_b
@@ -60,6 +59,9 @@ def random_test():
                        'execution_time': execution_time, 'iterations': iterations}, f, indent=2)
 
         for i, gaps in enumerate(all_gaps):
+            for j, gap in enumerate(gaps):
+                if gap < 0:
+                    print(f'Negative gap in dimension {n}, subproblem {i}, iteration {j}')
             plt.plot(gaps)
             plt.xlabel('Iteration')
             plt.ylabel('Gap')
@@ -192,8 +194,7 @@ def test_active_scaling():
 
 
 def test():
-    test_functions = [random_test, test_rank_scaling, test_eccentricity_scaling,
-                      test_active_scaling]
+    test_functions = [random_test]
     processes = [multiprocessing.Process(target=test_function) for test_function in test_functions]
 
     for process in processes:
