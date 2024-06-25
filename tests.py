@@ -46,8 +46,8 @@ def random_test():
 
         constraints = [BoxConstraints(A, b, ineq=True) for A in As]
 
-        random_eccentricity = round(np.random.uniform(0.1, 1), 4)
-        random_rank = np.random.randint(1, n + 1)
+        random_eccentricity = round(np.random.uniform(0, 1), 4)
+        random_rank = np.random.uniform(0.01, 1.01)
         random_active = round(np.random.uniform(0.1, 1), 1)
         problem = QP(n, rank=random_rank, eccentricity=random_eccentricity, active=random_active, c=False)
         _, execution_time, iterations, all_gaps, all_convergence_rates = solve(problem, constraints, As, n, verbose=0)
@@ -82,12 +82,13 @@ def random_test():
 
 def test_dimension_scaling():
     test_dimensions = [10, 100, 200, 500, 1000]
-    eccentricity = 0.5
+    rank = 1
+    eccentricity = 0.99
     active = 1.0
     b = create_b()
 
     with open(f'tests/dimension_scaling.json', 'w') as f:
-        json.dump({'dimensions': test_dimensions, "ranks": test_dimensions,
+        json.dump({'dimensions': test_dimensions, "rank": rank,
                    "eccentricity": eccentricity, "active": active}, f, indent=2)
 
     for n in tqdm(test_dimensions):
@@ -95,7 +96,7 @@ def test_dimension_scaling():
         As = [create_A(n, I) for I in Is]
 
         constraints = [BoxConstraints(A, b, ineq=True) for A in As]
-        problem = QP(n, rank=n, eccentricity=eccentricity, active=active, c=False, seed=seed)
+        problem = QP(n, rank=rank, eccentricity=eccentricity, active=active, c=False, seed=seed)
 
         execution_times = []
         for _ in range(1000):
@@ -110,9 +111,9 @@ def test_dimension_scaling():
 
 def test_rank_scaling():
     n = 50
-    test_ranks = list(np.arange(1, n + 1, 1, dtype=int))
-    test_ranks = [int(rank) for rank in test_ranks]
-    eccentricity = 0.5
+    test_ranks = list(np.arange(0.1, 1.1, 0.1, dtype=float))
+    test_ranks = [float(rank) for rank in test_ranks]
+    eccentricity = 0.99
     active = 1.0
     Is = create_index_sets(n, uniform=False, seed=seed)
     As = [create_A(n, I) for I in Is]
@@ -120,7 +121,7 @@ def test_rank_scaling():
     constraints = [BoxConstraints(A, b, ineq=True) for A in As]
 
     with open(f'tests/rank_scaling.json', 'w') as f:
-        json.dump({"dimensions": n, "eccentricity": eccentricity, "active": active, 'ranks': test_ranks, }, f,
+        json.dump({"dimensions": n, "eccentricity": eccentricity, "active": active, 'ranks': test_ranks}, f,
                   indent=2)
 
     for rank in tqdm(test_ranks):
@@ -139,7 +140,8 @@ def test_rank_scaling():
 
 def test_eccentricity_scaling():
     n = 50
-    test_eccentricities = list(np.arange(0.1, 1, 0.01))
+    rank = 1
+    test_eccentricities = list(np.arange(0, 1, 0.01))
     test_eccentricities = [float(eccentricity) for eccentricity in test_eccentricities]
     active = 1.0
     b = create_b()
@@ -148,11 +150,11 @@ def test_eccentricity_scaling():
     constraints = [BoxConstraints(A, b, ineq=True) for A in As]
 
     with open(f'tests/eccentricity_scaling.json', 'w') as f:
-        json.dump({"dimensions": n, "rank": n, "active": active, 'eccentricities': test_eccentricities}, f,
+        json.dump({"dimensions": n, "rank": rank, "active": active, 'eccentricities': test_eccentricities}, f,
                   indent=2)
 
     for eccentricity in tqdm(test_eccentricities):
-        problem = QP(n, rank=n, eccentricity=eccentricity, active=active, c=False, seed=seed)
+        problem = QP(n, rank=rank, eccentricity=eccentricity, active=active, c=False, seed=seed)
 
         execution_times = []
         for _ in range(1000):
@@ -168,7 +170,8 @@ def test_eccentricity_scaling():
 
 def test_active_scaling():
     n = 50
-    eccentricity = 0.5
+    rank = 1
+    eccentricity = 0.99
     test_actives = list(np.arange(0.1, 1.1, 0.1))
     test_actives = [float(active) for active in test_actives]
     b = create_b()
@@ -177,10 +180,10 @@ def test_active_scaling():
     constraints = [BoxConstraints(A, b, ineq=True) for A in As]
 
     with open(f'tests/active_scaling.json', 'w') as f:
-        json.dump({"dimensions": n, "rank": n, "eccentricity": eccentricity, 'actives': test_actives}, f, indent=2)
+        json.dump({"dimensions": n, "rank": rank, "eccentricity": eccentricity, 'actives': test_actives}, f, indent=2)
 
     for active in tqdm(test_actives):
-        problem = QP(n, rank=n, eccentricity=eccentricity, active=active, c=False, seed=seed)
+        problem = QP(n, rank=rank, eccentricity=eccentricity, active=active, c=False, seed=seed)
 
         execution_times = []
         for _ in range(1000):

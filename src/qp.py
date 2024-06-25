@@ -1,25 +1,29 @@
 import numpy as np
 
 
-def generate_Q(dim: int, rank: int, eccentricity: float) -> np.ndarray:
+def generate_Q(dim: int, rank: float, eccentricity: float) -> np.ndarray:
     """
-    Generate a positive semi-definite matrix Q of size dim x dim.
+    Generate a positive semi-definite matrix Q of size m x n, where m = rank * n.
 
     Parameters:
     dim (int): The dimension of the matrix Q.
-    rank (int): The rank of the matrix A used to generate Q.
-    eccentricity (float): The eccentricity parameter used to modify Q.
+    rank (float): The rank of the matrix Q, expressed as a fraction of the dimension.
+    eccentricity (float): The eccentricity of the matrix Q.
 
     Returns:
     Q (ndarray): The generated positive semi-definite matrix Q.
     """
-    A = np.random.rand(round(rank * dim), dim)
+
+    A = np.random.rand(max(round(rank * dim), 1), dim)
     Q = np.dot(A.T, A)
-    V, D = np.linalg.eig(Q)
-    if D[0, 0] > 1e-14:
+    if eccentricity < 1:
+        V, D = np.linalg.eig(Q)
+        # all the eigenvalues are real due to the structure of Q but,
+        # there might be a small imaginary part due to numerical errors, so the real part is taken
+        V = V.real
+        D = D.real
         d = np.diag(D)
-        l = (d[0] * np.ones(dim) + (d[0] / (d[dim - 1] - d[0]))
-             * (2 * eccentricity / (1 - eccentricity))
+        l = (d[0] * np.ones(dim) + (d[0] / (d[dim - 1] - d[0])) * (2 * eccentricity / (1 - eccentricity))
              * (d - d[0] * np.ones(dim)))
         Q = np.dot(np.dot(V, np.diag(l)).reshape(-1, 1), V.T.reshape(1, -1))
     return Q
@@ -30,25 +34,26 @@ def generate_q(dim: int, Q: np.ndarray, active: float, umin: float, umax: float)
     Generates a random vector 'z' based on the given parameters and returns the dot product of '-Q' and 'z'.
 
     Parameters:
-    - dim (int): The dimension of the vector 'z'.
-    - Q (np.ndarray): The matrix 'Q' used in the dot product calculation.
-    - active (float): The probability of each element in 'z' being active.
+    - dim (int): The dimension of the vector q.
+    - Q (np.ndarray): The matrix Q.
+    - active (float): The fraction of active constraints.
 
     Returns:
-    - np.ndarray: The result of the dot product between '-Q' and 'z'.
+    - np.ndarray: The q vector.
     """
+
     u = umin * np.ones(dim) + (umax - umin) * np.random.rand(dim)
     z = np.zeros(dim)
     outb = np.random.rand(dim) <= active
     lr = np.random.rand(dim) <= 0.5
-    l = outb & lr
-    r = outb & ~lr
+    l = np.logical_and(outb, lr)
+    r = np.logical_and(outb, np.logical_not(lr))
     z[l] = -np.random.rand(np.sum(l)) * u[l]
-    z[r] = (1 + np.random.rand(np.sum(r))) * u[r]
-    outb = ~outb
+    z[r] = u[r] * (1 + np.random.rand(np.sum(r)))
+    outb = np.logical_not(outb)
     z[outb] = np.random.rand(np.sum(outb)) * u[outb]
 
-    return np.dot(-Q, z)
+    return -np.dot(Q, z)
 
 
 class QP:
@@ -57,16 +62,24 @@ class QP:
 
     Args:
         dim (int): The dimension of the problem.
-        rank (int, optional): The rank of the problem. Defaults to None.
-        eccentricity (float, optional): The eccentricity of the problem. Defaults to 0.9.
-        active (float, optional): The percentage of active constraints. Defaults to 1.
-        c (bool, optional): Whether to include a random constant term. Defaults to False.
-        seed (int, optional): The seed for the random number generator. Defaults to None.
+        rank (float, optional): The rank of the problem defined as a percentage of the dimension.
+        Default to 1.
+        eccentricity (float, optional): The eccentricity of the problem.
+        Default to 0.9.
+        active (float, optional): The percentage of active constraints.
+        Default to 1.
+        c (bool, optional): Whether to include a random constant term.
+        Defaults to False.
+        seed (int, optional): The seed for the random number generator.
+        Defaults to None.
 
     Raises:
         ValueError: If `dim` is less than 1.
-        ValueError: If `rank` is greater than `dim`.
-        ValueError: If `rank` is less than 1.
+        ValueError: If `rank` is less than 0.
+        ValueError: If `eccentricity` is less than 0.
+        ValueError: If `eccentricity` is greater than 1.
+        ValueError: If `active` is less than 0.
+        ValueError: If `active` is greater than 1.
 
     Attributes:
         dim (int): The dimension of the problem.
@@ -79,21 +92,30 @@ class QP:
     Methods:
         evaluate(x): Evaluate the quadratic function at point x.
         derivative(x): Computes the derivative of the quadratic function at point x.
+        minimum(): Returns the minimum value of the quadratic function.
         set_subproblem(indexes): Sets the subproblem by selecting specific indexes.
         get_Q(): Returns the submatrix of Q.
         get_q(): Returns the sub vector of q.
     """
 
-    def __init__(self, dim: int, rank: int = None, eccentricity: float = 0.9, active: float = 1,
+    def __init__(self, dim: int, rank: float = 1, eccentricity: float = 0.9, active: float = 1,
                  umin: float = 0, umax: float = 1, c: bool = False, seed: int = None) -> None:
         if dim < 1:
             raise ValueError("dim must be greater than 0")
-        if rank is None:
-            rank = dim
-        elif rank > dim:
-            raise ValueError("rank must be less than or equal to dim")
-        elif rank < 1:
-            raise ValueError("rank must be greater or equal than 1")
+        if rank <= 0:
+            raise ValueError("rank must be greater than 0")
+        if rank > 1:
+            rank = 1
+        if eccentricity < 0:
+            raise ValueError("eccentricity must be greater or equal than 0")
+        elif eccentricity >= 1:
+            raise ValueError("eccentricity must be less than 1")
+        if rank < 1:
+            eccentricity = 1
+        if active < 0:
+            raise ValueError("active must be greater or equal than 0")
+        elif active > 1:
+            raise ValueError("active must be less or equal than 1")
         if seed:
             np.random.seed(seed)
 
@@ -121,6 +143,7 @@ class QP:
             float: The value of the quadratic function at point x.
 
         """
+
         return (np.dot(np.dot(x.T, self._subQ), x)/2) + np.dot(self._subq.T, x) + self._c
 
     def derivative(self, x: np.ndarray) -> np.ndarray:
@@ -134,12 +157,14 @@ class QP:
             ndarray: The derivative of the quadratic function at point x.
 
         """
+
         return np.dot(self._subQ, x) + self._subq
 
     def minimum(self):
         """
         Returns the minimum value of the quadratic function.
         """
+
         return self.evaluate(-np.dot(np.linalg.pinv(self._subQ), self._subq))
 
     def set_subproblem(self, indexes: list):
@@ -149,6 +174,7 @@ class QP:
         Args:
             indexes (ndarray): The indexes to select for the subproblem.
         """
+
         self._subQ = self._Q[indexes][:, indexes]
         self._subq = self._q[indexes]
 

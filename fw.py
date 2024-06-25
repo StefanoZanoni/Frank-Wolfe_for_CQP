@@ -16,9 +16,9 @@ def main():
                         default=10,
                         help='The dimension of the problem. Default is 10.')
     parser.add_argument('--rank', '-r',
-                        type=int,
-                        default=10,
-                        help='The rank of the matrix Q. Default is 10.')
+                        type=float,
+                        default=1,
+                        help='The rank of the matrix Q. Default is 1.')
     parser.add_argument('--eccentricity', '-e',
                         type=float,
                         default=0.9,
