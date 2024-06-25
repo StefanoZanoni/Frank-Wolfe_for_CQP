@@ -136,6 +136,12 @@ class QP:
         """
         return np.dot(self._subQ, x) + self._subq
 
+    def minimum(self):
+        """
+        Returns the minimum value of the quadratic function.
+        """
+        return self.evaluate(-np.dot(np.linalg.pinv(self._subQ), self._subq))
+
     def set_subproblem(self, indexes: list):
         """
         Sets the subproblem by selecting specific indexes.

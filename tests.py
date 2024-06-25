@@ -6,6 +6,7 @@ import json
 import multiprocessing
 import matplotlib.pyplot as plt
 from tqdm import tqdm
+from math import log
 
 from src.index_set import create_index_sets
 from src.constraints import create_A, create_b
@@ -13,7 +14,7 @@ from src.constraints import BoxConstraints
 from src.cqp import BCQP
 from src.frank_wolfe import frank_wolfe
 from src.qp import QP
-from main import solve
+from src.solver import solve
 
 if not os.path.exists(f'tests'):
     os.makedirs(f'tests')
@@ -50,7 +51,7 @@ def random_test():
         random_rank = np.random.randint(1, n + 1)
         random_active = round(np.random.uniform(0.1, 1), 1)
         problem = QP(n, rank=random_rank, eccentricity=random_eccentricity, active=random_active, c=False)
-        _, execution_time, iterations, all_gaps = solve(problem, constraints, As, n, verbose=0)
+        _, execution_time, iterations, all_gaps, all_convergence_rates = solve(problem, constraints, As, n, verbose=0)
         iterations_number += len(iterations)
         iteration_limit_number += iterations.count(1000)
 
@@ -63,6 +64,13 @@ def random_test():
             plt.xlabel('Iteration')
             plt.ylabel('Gap')
             plt.savefig(f'tests/dimension_{n}/subproblem_{i}_gap.png')
+            plt.close()
+
+        for i, convergence_rates in enumerate(all_convergence_rates):
+            plt.plot(convergence_rates)
+            plt.xlabel('Iteration')
+            plt.ylabel('Convergence rate')
+            plt.savefig(f'tests/dimension_{n}/subproblem_{i}_convergence_rate.png')
             plt.close()
 
     max_iterations_percentage = round(iteration_limit_number / iterations_number, 3) * 100
@@ -89,7 +97,7 @@ def test_dimension_scaling():
 
         execution_times = []
         for _ in range(1000):
-            _, execution_time, _, _ = solve(problem, constraints, As, n, verbose=0)
+            _, execution_time, _, _, _ = solve(problem, constraints, As, n, verbose=0)
             execution_times.append(execution_time)
         mean = round(np.mean(execution_times) * 1000, 5)
         std = round(np.std(execution_times) * 1000, 5)
@@ -118,7 +126,7 @@ def test_rank_scaling():
 
         execution_times = []
         for _ in range(1000):
-            _, execution_time, _, _ = solve(problem, constraints, As, n, verbose=0)
+            _, execution_time, _, _, _ = solve(problem, constraints, As, n, verbose=0)
             execution_times.append(execution_time)
         mean = round(np.mean(execution_times) * 1000, 5)
         std = round(np.std(execution_times) * 1000, 5)
@@ -146,7 +154,7 @@ def test_eccentricity_scaling():
 
         execution_times = []
         for _ in range(1000):
-            _, execution_time, _, _ = solve(problem, constraints, As, n, verbose=0)
+            _, execution_time, _, _, _ = solve(problem, constraints, As, n, verbose=0)
             execution_times.append(execution_time)
         mean = round(np.mean(execution_times) * 1000, 5)
         std = round(np.std(execution_times) * 1000, 5)
@@ -174,7 +182,7 @@ def test_active_scaling():
 
         execution_times = []
         for _ in range(1000):
-            _, execution_time, _, _ = solve(problem, constraints, As, n, verbose=0)
+            _, execution_time, _, _, _ = solve(problem, constraints, As, n, verbose=0)
             execution_times.append(execution_time)
         mean = round(np.mean(execution_times) * 1000, 5)
         std = round(np.std(execution_times) * 1000, 5)
@@ -184,7 +192,7 @@ def test_active_scaling():
 
 
 def test():
-    test_functions = [test_dimension_scaling, test_rank_scaling, test_eccentricity_scaling,
+    test_functions = [random_test, test_rank_scaling, test_eccentricity_scaling,
                       test_active_scaling]
     processes = [multiprocessing.Process(target=test_function) for test_function in test_functions]
 

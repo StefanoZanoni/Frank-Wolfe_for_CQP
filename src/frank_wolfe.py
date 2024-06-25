@@ -13,7 +13,7 @@ def solve_LMO(grad: np.ndarray) -> np.ndarray:
 
 
 def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 1000, verbose: int = 1)\
-        -> tuple[np.ndarray, int, list[float]]:
+        -> tuple[np.ndarray, int, list[float], list[float]]:
     """
     Implement the Frank-Wolfe algorithm for solving convex optimization problems.
 
@@ -36,6 +36,9 @@ def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 100
 
     # gap history
     gaps = []
+
+    # convergence rate history
+    convergence_rates = []
 
     i = 0
     while i < max_iter:
@@ -63,9 +66,15 @@ def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 100
                     print(f'Iteration {i}: status = approximated, v = {v}, gap = {gap}')
             break
 
+        delta_k = v - cqp.problem.minimum()
+
         # line search for alpha
         alpha = ls.compute(x, d)
         x = x + alpha * d
+
+        delta_k_plus_1 = cqp.problem.evaluate(x) - cqp.problem.minimum()
+        convergence_rate = delta_k_plus_1 / delta_k
+        convergence_rates.append(convergence_rate)
 
         if verbose == 1:
             if i + 1 >= max_iter:
@@ -74,4 +83,4 @@ def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 100
                 print(f'Iteration {i}: status = non optimal, v = {v}, gap = {gap}')
         i += 1
 
-    return x, i, gaps
+    return x, i, gaps, convergence_rates

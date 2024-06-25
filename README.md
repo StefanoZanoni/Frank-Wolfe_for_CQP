@@ -14,11 +14,11 @@ pip install -r requirements.txt
 
 To run the code, use the following command:
 ```bash
-python3 main.py [-n/--dimensions DIMENSION_OF_THE_PROBLEM] [-r/--rank RANK_OF_THE_MATRIX] [-e/--eccentricity ECCENTRICITY_OF_THE_MATRIX] [-a/--active PERCENTAGE_OF_ACTIVE_CONSTRAINTS] [-v/--verbose VERBOSITY_LEVEL]
+python3 fw.py [-n/--dimensions DIMENSION_OF_THE_PROBLEM] [-r/--rank RANK_OF_THE_MATRIX] [-e/--eccentricity ECCENTRICITY_OF_THE_MATRIX] [-a/--active PERCENTAGE_OF_ACTIVE_CONSTRAINTS] [-v/--verbose VERBOSITY_LEVEL]
 ```
 or 
 ```bash
-python3 main.py [-h/--help]
+python3 fw.py [-h/--help]
 ```
 To get the help message.
 
