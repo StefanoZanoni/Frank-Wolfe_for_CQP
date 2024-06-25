@@ -18,7 +18,7 @@ def generate_Q(dim: int, rank: float, eccentricity: float) -> np.ndarray:
     Q = np.dot(A.T, A)
     if eccentricity < 1:
         V, D = np.linalg.eig(Q)
-        # all the eigenvalues are real due to the structure of Q but,
+        # all the eigenvalues are real due to the structure of Q, but
         # there might be a small imaginary part due to numerical errors, so the real part is taken
         V = V.real
         D = D.real
@@ -144,7 +144,7 @@ class QP:
 
         """
 
-        return (np.dot(np.dot(x.T, self._subQ), x)/2) + np.dot(self._subq.T, x) + self._c
+        return (np.dot(np.dot(x.T, self._subQ), x) / 2) + np.dot(self._subq.T, x) + self._c
 
     def derivative(self, x: np.ndarray) -> np.ndarray:
         """

@@ -50,13 +50,27 @@ def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 100
 
         # first order model evaluation
         d = z - x
-        lb = v + np.dot(grad.T, d)
+        dot = np.dot(grad.T, d)
+        if abs(dot) < 1e-10:
+            dot = 0
+        lb = v + dot
 
         # update the best lower bound
-        if lb > best_lb:
+        if lb > best_lb or dot == 0:
             best_lb = lb
 
         gap = (v - best_lb) / max(np.abs(v), 1)
+        if gap < 0:
+            print('x: ', x[x != 0])
+            print('z: ', z[z != 0])
+            print('d: ', d[d != 0])
+            print('grad: ', grad[grad != 0])
+            print('dot: ', np.dot(grad.T, d))
+            print('v: ', v)
+            print('lb: ', lb)
+            print('best_lb: ', best_lb)
+            print('gap: ', gap)
+            sys.exit(1)
         gaps.append(gap)
         if gap < eps:
             if verbose == 1:
