@@ -50,10 +50,7 @@ def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 100
 
         # first order model evaluation
         d = z - x
-        dot = np.dot(grad.T, d)
-        # if abs(dot) < 1e-10:
-        #     dot = 0
-        lb = v + dot
+        lb = v + np.dot(grad.T, d)
 
         # update the best lower bound
         if lb > best_lb:

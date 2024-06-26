@@ -16,20 +16,16 @@ def generate_Q(dim: int, rank: float, eccentricity: float) -> np.ndarray:
 
     A = np.random.rand(max(round(rank * dim), 1), dim)
     Q = np.dot(A.T, A)
-    if eccentricity < 1:
-        V, D = np.linalg.eig(Q)
-        # all the eigenvalues are real due to the structure of Q, but
-        # there might be a small imaginary part due to numerical errors, so the real part is taken
-        V = V.real
-        D = D.real
-        d = np.diag(D)
-        l = (d[0] * np.ones(dim) + (d[0] / (d[dim - 1] - d[0])) * (2 * eccentricity / (1 - eccentricity))
-             * (d - d[0] * np.ones(dim)))
-        Q = np.dot(np.dot(V, np.diag(l)).reshape(-1, 1), V.T.reshape(1, -1))
+    D, V = np.linalg.eig(Q)
+    D = np.sort(D)
+
+    if D[0] > 1e-14:
+        l = D[0] * np.ones(dim) + (D[0] / (D[dim-1] - D[0])) * (2 * eccentricity / (1 - eccentricity)) * (D - D[0] * np.ones(dim))
+        Q = np.linalg.multi_dot([V, np.diag(l), V.T])
     return Q
 
 
-def generate_q(dim: int, Q: np.ndarray, active: float, umin: float, umax: float) -> np.ndarray:
+def generate_q(dim: int, Q: np.ndarray, active: float) -> np.ndarray:
     """
     Generates a random vector 'z' based on the given parameters and returns the dot product of '-Q' and 'z'.
 
@@ -42,16 +38,17 @@ def generate_q(dim: int, Q: np.ndarray, active: float, umin: float, umax: float)
     - np.ndarray: The q vector.
     """
 
-    u = umin * np.ones(dim) + (umax - umin) * np.random.rand(dim)
+    # in our case, the upper bound of the box is 1 so u was simply omitted
+
     z = np.zeros(dim)
     outb = np.random.rand(dim) <= active
     lr = np.random.rand(dim) <= 0.5
     l = np.logical_and(outb, lr)
     r = np.logical_and(outb, np.logical_not(lr))
-    z[l] = -np.random.rand(np.sum(l)) * u[l]
-    z[r] = u[r] * (1 + np.random.rand(np.sum(r)))
+    z[l] = -np.random.rand(np.sum(l))
+    z[r] = (1 + np.random.rand(np.sum(r)))
     outb = np.logical_not(outb)
-    z[outb] = np.random.rand(np.sum(outb)) * u[outb]
+    z[outb] = np.random.rand(np.sum(outb))
 
     return -np.dot(Q, z)
 
@@ -99,7 +96,7 @@ class QP:
     """
 
     def __init__(self, dim: int, rank: float = 1, eccentricity: float = 0.9, active: float = 1,
-                 umin: float = 0, umax: float = 1, c: bool = False, seed: int = None) -> None:
+                 c: bool = False, seed: int = None) -> None:
         if dim < 1:
             raise ValueError("dim must be greater than 0")
         if rank <= 0:
@@ -110,8 +107,6 @@ class QP:
             raise ValueError("eccentricity must be greater or equal than 0")
         elif eccentricity >= 1:
             raise ValueError("eccentricity must be less than 1")
-        if rank < 1:
-            eccentricity = 1
         if active < 0:
             raise ValueError("active must be greater or equal than 0")
         elif active > 1:
@@ -122,7 +117,7 @@ class QP:
         self.dim = dim
         self._Q = generate_Q(dim, rank, eccentricity)
         self._subQ = self._Q
-        self._q = generate_q(dim, self._Q, active, umin, umax)
+        self._q = generate_q(dim, self._Q, active)
         self._subq = self._q
         if c:
             self._c = np.random.uniform(0, 1)
@@ -144,7 +139,7 @@ class QP:
 
         """
 
-        return (np.dot(np.dot(x.T, self._subQ), x) / 2) + np.dot(self._subq.T, x) + self._c
+        return (np.linalg.multi_dot([x.T, self._subQ, x]) / 2) + np.dot(self._subq.T, x) + self._c
 
     def derivative(self, x: np.ndarray) -> np.ndarray:
         """
@@ -165,7 +160,8 @@ class QP:
         Returns the minimum value of the quadratic function.
         """
 
-        return self.evaluate(-np.dot(np.linalg.pinv(self._subQ), self._subq))
+        x_minimum = -np.dot(np.linalg.pinv(self._subQ), self._subq)
+        return self.evaluate(x_minimum)
 
     def set_subproblem(self, indexes: list):
         """

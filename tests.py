@@ -50,7 +50,7 @@ def random_test():
         random_rank = np.random.uniform(0.01, 1.01)
         random_active = round(np.random.uniform(0.1, 1), 1)
         problem = QP(n, rank=random_rank, eccentricity=random_eccentricity, active=random_active, c=False)
-        _, execution_time, iterations, all_gaps, all_convergence_rates = solve(problem, constraints, As, n, verbose=0)
+        _, execution_time, iterations, all_gaps, all_convergence_rates, _ = solve(problem, constraints, As, n, verbose=0)
         iterations_number += len(iterations)
         iteration_limit_number += iterations.count(1000)
 
@@ -100,7 +100,7 @@ def test_dimension_scaling():
 
         execution_times = []
         for _ in range(1000):
-            _, execution_time, _, _, _ = solve(problem, constraints, As, n, verbose=0)
+            _, execution_time, _, _, _, _ = solve(problem, constraints, As, n, verbose=0)
             execution_times.append(execution_time)
         mean = round(np.mean(execution_times) * 1000, 5)
         std = round(np.std(execution_times) * 1000, 5)
@@ -129,7 +129,7 @@ def test_rank_scaling():
 
         execution_times = []
         for _ in range(1000):
-            _, execution_time, _, _, _ = solve(problem, constraints, As, n, verbose=0)
+            _, execution_time, _, _, _, _ = solve(problem, constraints, As, n, verbose=0)
             execution_times.append(execution_time)
         mean = round(np.mean(execution_times) * 1000, 5)
         std = round(np.std(execution_times) * 1000, 5)
@@ -158,7 +158,7 @@ def test_eccentricity_scaling():
 
         execution_times = []
         for _ in range(1000):
-            _, execution_time, _, _, _ = solve(problem, constraints, As, n, verbose=0)
+            _, execution_time, _, _, _, _ = solve(problem, constraints, As, n, verbose=0)
             execution_times.append(execution_time)
         mean = round(np.mean(execution_times) * 1000, 5)
         std = round(np.std(execution_times) * 1000, 5)
@@ -187,7 +187,7 @@ def test_active_scaling():
 
         execution_times = []
         for _ in range(1000):
-            _, execution_time, _, _, _ = solve(problem, constraints, As, n, verbose=0)
+            _, execution_time, _, _, _, _ = solve(problem, constraints, As, n, verbose=0)
             execution_times.append(execution_time)
         mean = round(np.mean(execution_times) * 1000, 5)
         std = round(np.std(execution_times) * 1000, 5)
