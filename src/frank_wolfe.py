@@ -34,14 +34,15 @@ def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 100
     ls = ExactLineSearch(cqp.problem)
 
     # gap history
-    gaps = []
+    gaps = [0] * max_iter
 
     # convergence rate history
-    convergence_rates = []
+    convergence_rates = [0] * max_iter
+    minimum = cqp.problem.minimum()
 
     i = 0
+    v = cqp.problem.evaluate(x)
     while i < max_iter:
-        v = cqp.problem.evaluate(x)
         grad = cqp.problem.derivative(x)
 
         # solve the linear minimization oracle
@@ -56,21 +57,22 @@ def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 100
             best_lb = lb
 
         gap = (v - best_lb) / max(np.abs(v), 1)
-        gaps.append(gap)
+        gaps[i] = gap
         if gap < eps:
             if verbose == 1:
                 print(f'Iteration {i}: status = approximated, v = {v}, gap = {gap}')
             break
 
-        delta_k = v - cqp.problem.minimum()
+        delta_k = v - minimum
 
         # line search for alpha
         alpha = ls.compute(x, d)
-        x = x + alpha * d
+        x += alpha * d
 
-        delta_k_plus_1 = cqp.problem.evaluate(x) - cqp.problem.minimum()
+        v = cqp.problem.evaluate(x)
+        delta_k_plus_1 = v - minimum
         convergence_rate = delta_k_plus_1 / delta_k
-        convergence_rates.append(convergence_rate)
+        convergence_rates[i] = convergence_rate
 
         if verbose == 1:
             if i + 1 >= max_iter:
@@ -79,4 +81,4 @@ def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 100
                 print(f'Iteration {i}: status = non optimal, v = {v}, gap = {gap}')
         i += 1
 
-    return x, v, i, gaps, convergence_rates
+    return x, v, i, gaps[:i], convergence_rates[:i]

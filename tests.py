@@ -27,7 +27,7 @@ def append_to_json_file(data, filename):
 
 
 def random_test():
-    test_dimensions = np.arange(10, 1010, 10)
+    test_dimensions = np.arange(1, 101, 1)
     for n in test_dimensions:
         if not os.path.exists(f'tests/dimension_{n}'):
             os.makedirs(f'tests/dimension_{n}')
@@ -90,9 +90,9 @@ def random_test():
 
 
 def test_dimension_scaling():
-    test_dimensions = [10, 100, 200, 500, 1000]
+    test_dimensions = [10, 100, 250, 500]
     rank = 1
-    eccentricity = 0.99
+    eccentricity = 0.5
     active = 1.0
     b = create_b()
 
@@ -123,7 +123,7 @@ def test_rank_scaling():
     n = 50
     test_ranks = list(np.arange(0.1, 1.1, 0.1, dtype=float))
     test_ranks = [float(rank) for rank in test_ranks]
-    eccentricity = 0.99
+    eccentricity = 0.5
     active = 1.0
     Is = create_index_sets(n, uniform=False, seed=seed)
     As = [create_A(n, I) for I in Is]
@@ -183,7 +183,7 @@ def test_eccentricity_scaling():
 def test_active_scaling():
     n = 50
     rank = 1
-    eccentricity = 0.99
+    eccentricity = 0.5
     test_actives = list(np.arange(0, 1.1, 0.1))
     test_actives = [float(active) for active in test_actives]
     b = create_b()
