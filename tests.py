@@ -54,14 +54,13 @@ def append_to_json_file(data, filename):
 
 
 def random_test():
-    test_dimensions = np.arange(1, 101, 1)
+    test_dimensions = np.arange(50, 151, 1)
     for n in test_dimensions:
         ensure_dir_exists(f'tests/dimension_{n}')
 
     iterations_number = 0
     iteration_limit_number = 0
     b = create_b()
-    mae_list = []
     iterations_mean_list = []
     execution_times = []
     for n in tqdm(test_dimensions):
@@ -74,7 +73,7 @@ def random_test():
         random_rank = np.random.uniform(0.01, 1.01)
         random_active = round(np.random.uniform(0, 1), 1)
         problem = QP(n, rank=random_rank, eccentricity=random_eccentricity, active=random_active, c=False)
-        _, execution_time, iterations, all_gaps, all_convergence_rates, optimal_minimums, approximated_minimums = \
+        _, execution_time, iterations, all_gaps, all_convergence_rates, _, _ = \
             solve(problem, constraints, As, n, verbose=0)
 
         execution_times.append(execution_time)
@@ -82,11 +81,9 @@ def random_test():
         mean_iterations = round(np.mean(iterations))
         iterations_mean_list.append(mean_iterations)
         iteration_limit_number += iterations.count(1000)
-        mae = np.mean(np.abs(np.array(optimal_minimums) - np.array(approximated_minimums)))
-        mae_list.append(mae)
 
         data = {'rank': random_rank, 'eccentricity': random_eccentricity, 'active': random_active,
-                'execution_time': execution_time, 'iterations': iterations, 'mae': mae}
+                'execution_time': execution_time, 'iterations': iterations}
         dump_json(data, f'tests/dimension_{n}/random_results.json')
 
         for i, gaps in enumerate(all_gaps):
@@ -100,11 +97,10 @@ def random_test():
                           f'tests/dimension_{n}/subproblem_{i}_convergence_rate.png')
 
     mean_execution_times = round(np.mean(execution_times) * 1000, 5)
-    mean_mae = np.mean(mae_list)
     mean_iterations = round(np.mean(iterations_mean_list))
     max_iterations_percentage = round(iteration_limit_number / iterations_number, 3) * 100
-    data = {'max_iteration_percentage': max_iterations_percentage, 'mean_mae': mean_mae,
-            'mean_iterations': mean_iterations, 'mean_execution_time (ms)': mean_execution_times}
+    data = {'max_iteration_percentage': max_iterations_percentage, 'mean_iterations': mean_iterations,
+            'mean_execution_time (ms)': mean_execution_times}
     dump_json(data, 'tests/statistics.json')
 
 
