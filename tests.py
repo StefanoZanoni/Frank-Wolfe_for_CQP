@@ -1,17 +1,12 @@
 import numpy as np
-import argparse
-import time
 import os
 import json
-import multiprocessing
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 
 from src.index_set import create_index_sets
 from src.constraints import create_A, create_b
 from src.constraints import BoxConstraints
-from src.cqp import BCQP
-from src.frank_wolfe import frank_wolfe
 from src.qp import QP
 from src.solver import solve
 
@@ -113,14 +108,14 @@ def test_dimension_scaling():
         problem = QP(n, rank=rank, eccentricity=eccentricity, active=active, c=False, seed=seed)
 
         execution_times = []
-        for _ in range(1000):
+        for _ in range(100):
             _, execution_time, _, _, _, optimal_minimums, approximated_minimums\
                 = solve(problem, constraints, As, n, verbose=0)
             execution_times.append(execution_time)
         mean = round(np.mean(execution_times) * 1000, 5)
         std = round(np.std(execution_times) * 1000, 5)
 
-        new_data = {f'mean_execution_time_dimension_{n}': mean, f'standard_deviation_dimension_{n}': std}
+        new_data = {f'mean_execution_time_dimension_{n} (ms)': mean, f'standard_deviation_dimension_{n} (ms)': std}
         append_to_json_file(new_data, f'tests/dimension_scaling.json')
 
 
@@ -143,14 +138,14 @@ def test_rank_scaling():
         problem = QP(n, rank=rank, eccentricity=eccentricity, active=active, c=False, seed=seed)
 
         execution_times = []
-        for _ in range(1000):
+        for _ in range(100):
             _, execution_time, _, _, _, optimal_minimums, approximated_minimums\
                 = solve(problem, constraints, As, n, verbose=0)
             execution_times.append(execution_time)
         mean = round(np.mean(execution_times) * 1000, 5)
         std = round(np.std(execution_times) * 1000, 5)
 
-        new_data = {f'mean_execution_time_rank_{rank}': mean, f'standard_deviation_dimension_{rank}': std}
+        new_data = {f'mean_execution_time_rank_{rank} (ms)': mean, f'standard_deviation_dimension_{rank} (ms)': std}
         append_to_json_file(new_data, f'tests/rank_scaling.json')
 
 
@@ -173,15 +168,15 @@ def test_eccentricity_scaling():
         problem = QP(n, rank=rank, eccentricity=eccentricity, active=active, c=False, seed=seed)
 
         execution_times = []
-        for _ in range(1000):
+        for _ in range(100):
             _, execution_time, _, _, _, optimal_minimums, approximated_minimums\
                 = solve(problem, constraints, As, n, verbose=0)
             execution_times.append(execution_time)
         mean = round(np.mean(execution_times) * 1000, 5)
         std = round(np.std(execution_times) * 1000, 5)
 
-        new_data = {f'mean_execution_time_eccentricity_{eccentricity}': mean,
-                    f'standard_deviation_eccentricity_{eccentricity}': std}
+        new_data = {f'mean_execution_time_eccentricity_{eccentricity} (ms)': mean,
+                    f'standard_deviation_eccentricity_{eccentricity} (ms)': std}
         append_to_json_file(new_data, f'tests/eccentricity_scaling.json')
 
 
@@ -203,25 +198,23 @@ def test_active_scaling():
         problem = QP(n, rank=rank, eccentricity=eccentricity, active=active, c=False, seed=seed)
 
         execution_times = []
-        for _ in range(1000):
+        for _ in range(100):
             _, execution_time, _, _, _, optimal_minimums, approximated_minimums\
                 = solve(problem, constraints, As, n, verbose=0)
             execution_times.append(execution_time)
         mean = round(np.mean(execution_times) * 1000, 5)
         std = round(np.std(execution_times) * 1000, 5)
 
-        new_data = {f'mean_execution_time_active_{active}': mean, f'standard_deviation_active_{active}': std}
+        new_data = {f'mean_execution_time_active_{active} (ms)': mean, f'standard_deviation_active_{active} (ms)': std}
         append_to_json_file(new_data, f'tests/active_scaling.json')
 
 
 def test():
-    test_functions = [random_test]
-    processes = [multiprocessing.Process(target=test_function) for test_function in test_functions]
-
-    for process in processes:
-        process.start()
-    for process in processes:
-        process.join()
+    random_test()
+    test_dimension_scaling()
+    test_rank_scaling()
+    test_eccentricity_scaling()
+    test_active_scaling()
 
     print('All tests done.\n', flush=True)
 

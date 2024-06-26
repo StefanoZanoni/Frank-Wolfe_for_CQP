@@ -1,8 +1,6 @@
 from src.cqp import CQP
-from src.line_search import ExactLineSearch, BackTrackingLineSearch, BackTrackingArmijoLineSearch, \
-    BackTrackingArmijoStrongWolfeLineSearch
+from src.line_search import ExactLineSearch
 import numpy as np
-import sys
 
 
 def solve_LMO(grad: np.ndarray) -> np.ndarray:

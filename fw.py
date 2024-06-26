@@ -1,4 +1,3 @@
-import numpy as np
 import argparse
 
 from src.index_set import create_index_sets
