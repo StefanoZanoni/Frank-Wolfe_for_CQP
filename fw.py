@@ -41,12 +41,12 @@ def main():
     if verbose != 0:
         verbose = 1
 
-    Is = create_index_sets(n, uniform=False, seed=5)
+    Is = create_index_sets(n, uniform=False)
     As = [create_A(n, I) for I in Is]
     b = create_b()
 
     constraints = [BoxConstraints(A, b, ineq=True) for A in As]
-    problem = QP(n, rank=rank, eccentricity=eccentricity, active=active, c=False, seed=5)
+    problem = QP(n, rank=rank, eccentricity=eccentricity, active=active, c=False)
 
     solution, execution_time, iterations, _, _, optimal_minimums = solve(problem, constraints, As, n, verbose=verbose)
 

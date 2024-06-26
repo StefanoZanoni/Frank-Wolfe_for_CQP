@@ -17,7 +17,17 @@ def generate_Q(dim: int, rank: float, eccentricity: float) -> np.ndarray:
     A = np.random.rand(max(round(rank * dim), 1), dim)
     Q = np.dot(A.T, A)
     D, V = np.linalg.eig(Q)
-    D = np.sort(D)
+
+    # All eigenvalues are real and >= 0 due to the structure of Q. However,
+    # there might be small numerical errors that make them complex with a negligible imaginary part (e.g., 1e-17),
+    D = D.real
+    V = V.real
+    # sort the eigenvalues in ascending order since np.linalg.eig does not guarantee this
+    sort_indices = np.argsort(D)
+    D = D[sort_indices]
+    V = V[:, sort_indices]
+    # moreover, when this happens also the real part might result slightly negative (e.g., -1e-17), so we set it to 0
+    D = np.maximum(D, 0)
 
     if D[0] > 1e-14:
         l = D[0] * np.ones(dim) + (D[0] / (D[dim-1] - D[0])) * (2 * eccentricity / (1 - eccentricity)) * (D - D[0] * np.ones(dim))

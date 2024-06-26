@@ -71,10 +71,7 @@ def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 100
         gaps.append(gap)
         if gap < eps:
             if verbose == 1:
-                if gap == 0:
-                    print(f'Iteration {i}: status = optimal, v = {v}, gap = {0}')
-                else:
-                    print(f'Iteration {i}: status = approximated, v = {v}, gap = {gap}')
+                print(f'Iteration {i}: status = approximated, v = {v}, gap = {gap}')
             break
 
         delta_k = v - cqp.problem.minimum()
