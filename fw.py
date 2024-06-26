@@ -27,6 +27,10 @@ def main():
                         type=float,
                         default=1.0,
                         help='The active constraints percentage of the problem. Default is 1.0.')
+    parser.add_argument('--iterations', '-i',
+                        type=int,
+                        default=1000,
+                        help='The maximum number of iterations. Default is 1000.')
     parser.add_argument('--verbose', '-v',
                         type=int,
                         default=1,
@@ -37,6 +41,7 @@ def main():
     rank = args.rank
     eccentricity = args.eccentricity
     active = args.active
+    max_iterations = args.iterations
     verbose = args.verbose
     if verbose != 0:
         verbose = 1
@@ -48,12 +53,14 @@ def main():
     constraints = [BoxConstraints(A, b, ineq=True) for A in As]
     problem = QP(n, rank=rank, eccentricity=eccentricity, active=active, c=False)
 
-    solution, execution_time, iterations, _, _, optimal_minimums = solve(problem, constraints, As, n, verbose=verbose)
+    solution, execution_time, iterations, _, _, optimal_minimums, approximated_minimums = (
+        solve(problem, constraints, As, n, max_iter=max_iterations, verbose=verbose))
 
     print(f"Execution Time: {round(execution_time * 1000, 4)} ms")
     print(f"Iterations for each sub-problem: {iterations}")
     print(f'Founded solution: {solution}')
     print(f'Optimal minimums: {optimal_minimums}')
+    print(f'Approximated minimums: {approximated_minimums}')
 
 
 if __name__ == '__main__':

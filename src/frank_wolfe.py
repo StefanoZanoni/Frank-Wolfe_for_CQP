@@ -13,7 +13,7 @@ def solve_LMO(grad: np.ndarray) -> np.ndarray:
 
 
 def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 1000, verbose: int = 1)\
-        -> tuple[np.ndarray, int, list[float], list[float]]:
+        -> tuple[np.ndarray, float, int, list[float], list[float]]:
     """
     Implement the Frank-Wolfe algorithm for solving convex optimization problems.
 
@@ -22,7 +22,8 @@ def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 100
     :param eps: The tolerance for the stopping criterion (default is 1e-6).
     :param max_iter: The maximum number of iterations (default is 1000).
     :param verbose: The verbosity level (default is 1).
-    :return: The optimal point, number of iterations and the gap history.
+    :return: The approximated point, the approximated value, the number of iterations, the gap history
+     and the convergence rate history.
     """
 
     # starting point
@@ -57,17 +58,6 @@ def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 100
             best_lb = lb
 
         gap = (v - best_lb) / max(np.abs(v), 1)
-        if gap < 0:
-            print('x: ', x[x != 0])
-            print('z: ', z[z != 0])
-            print('d: ', d[d != 0])
-            print('grad: ', grad[grad != 0])
-            print('dot: ', np.dot(grad.T, d))
-            print('v: ', v)
-            print('lb: ', lb)
-            print('best_lb: ', best_lb)
-            print('gap: ', gap)
-            sys.exit(1)
         gaps.append(gap)
         if gap < eps:
             if verbose == 1:
@@ -91,4 +81,4 @@ def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 100
                 print(f'Iteration {i}: status = non optimal, v = {v}, gap = {gap}')
         i += 1
 
-    return x, i, gaps, convergence_rates
+    return x, v, i, gaps, convergence_rates

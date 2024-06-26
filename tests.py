@@ -40,6 +40,9 @@ def random_test():
     iterations_number = 0
     iteration_limit_number = 0
     b = create_b()
+    mae_list = []
+    iterations_mean_list = []
+    execution_times = []
     for n in tqdm(test_dimensions):
         Is = create_index_sets(n, uniform=False)
         As = [create_A(n, I) for I in Is]
@@ -48,23 +51,30 @@ def random_test():
 
         random_eccentricity = round(np.random.uniform(0, 1), 4)
         random_rank = np.random.uniform(0.01, 1.01)
-        random_active = round(np.random.uniform(0.1, 1), 1)
+        random_active = round(np.random.uniform(0, 1), 1)
         problem = QP(n, rank=random_rank, eccentricity=random_eccentricity, active=random_active, c=False)
-        _, execution_time, iterations, all_gaps, all_convergence_rates, _ = solve(problem, constraints, As, n, verbose=0)
+        _, execution_time, iterations, all_gaps, all_convergence_rates, optimal_minimums, approximated_minimums =\
+            solve(problem, constraints, As, n, verbose=0)
+
+        execution_times.append(execution_time)
         iterations_number += len(iterations)
+        mean_iterations = round(np.mean(iterations))
+        iterations_mean_list.append(mean_iterations)
         iteration_limit_number += iterations.count(1000)
+        mae = np.mean(np.abs(np.array(optimal_minimums) - np.array(approximated_minimums)))
+        mae_list.append(mae)
 
         with open(f'tests/dimension_{n}/random_results.json', 'w') as f:
             json.dump({'rank': random_rank, 'eccentricity': random_eccentricity, 'active': random_active,
-                       'execution_time': execution_time, 'iterations': iterations}, f, indent=2)
+                       'execution_time': execution_time, 'iterations': iterations, 'mae': mae}, f, indent=2)
 
         for i, gaps in enumerate(all_gaps):
             for j, gap in enumerate(gaps):
-                if gap < 0:
-                    print(f'Negative gap in dimension {n}, subproblem {i}, iteration {j}')
+                if gap != 0:
+                    gaps[j] = np.log1p(gap)
             plt.plot(gaps)
             plt.xlabel('Iteration')
-            plt.ylabel('Gap')
+            plt.ylabel('Gap (log scale)')
             plt.savefig(f'tests/dimension_{n}/subproblem_{i}_gap.png')
             plt.close()
 
@@ -75,9 +85,13 @@ def random_test():
             plt.savefig(f'tests/dimension_{n}/subproblem_{i}_convergence_rate.png')
             plt.close()
 
+    mean_execution_times = round(np.mean(execution_times) * 1000, 5)
+    mean_mae = np.mean(mae_list)
+    mean_iterations = round(np.mean(iterations_mean_list))
     max_iterations_percentage = round(iteration_limit_number / iterations_number, 3) * 100
-    with open(f'tests/max_iterations.json', 'w') as f:
-        json.dump({'max_iteration_percentage': max_iterations_percentage}, f)
+    with open(f'tests/statistics.json', 'w') as f:
+        json.dump({'max_iteration_percentage': max_iterations_percentage, 'mean_mae': mean_mae,
+                   'mean_iterations': mean_iterations, 'mean_execution_time (ms)': mean_execution_times}, f)
 
 
 def test_dimension_scaling():
@@ -100,7 +114,8 @@ def test_dimension_scaling():
 
         execution_times = []
         for _ in range(1000):
-            _, execution_time, _, _, _, _ = solve(problem, constraints, As, n, verbose=0)
+            _, execution_time, _, _, _, optimal_minimums, approximated_minimums\
+                = solve(problem, constraints, As, n, verbose=0)
             execution_times.append(execution_time)
         mean = round(np.mean(execution_times) * 1000, 5)
         std = round(np.std(execution_times) * 1000, 5)
@@ -129,7 +144,8 @@ def test_rank_scaling():
 
         execution_times = []
         for _ in range(1000):
-            _, execution_time, _, _, _, _ = solve(problem, constraints, As, n, verbose=0)
+            _, execution_time, _, _, _, optimal_minimums, approximated_minimums\
+                = solve(problem, constraints, As, n, verbose=0)
             execution_times.append(execution_time)
         mean = round(np.mean(execution_times) * 1000, 5)
         std = round(np.std(execution_times) * 1000, 5)
@@ -158,7 +174,8 @@ def test_eccentricity_scaling():
 
         execution_times = []
         for _ in range(1000):
-            _, execution_time, _, _, _, _ = solve(problem, constraints, As, n, verbose=0)
+            _, execution_time, _, _, _, optimal_minimums, approximated_minimums\
+                = solve(problem, constraints, As, n, verbose=0)
             execution_times.append(execution_time)
         mean = round(np.mean(execution_times) * 1000, 5)
         std = round(np.std(execution_times) * 1000, 5)
@@ -172,7 +189,7 @@ def test_active_scaling():
     n = 50
     rank = 1
     eccentricity = 0.99
-    test_actives = list(np.arange(0.1, 1.1, 0.1))
+    test_actives = list(np.arange(0, 1.1, 0.1))
     test_actives = [float(active) for active in test_actives]
     b = create_b()
     Is = create_index_sets(n, uniform=False, seed=seed)
@@ -187,7 +204,8 @@ def test_active_scaling():
 
         execution_times = []
         for _ in range(1000):
-            _, execution_time, _, _, _, _ = solve(problem, constraints, As, n, verbose=0)
+            _, execution_time, _, _, _, optimal_minimums, approximated_minimums\
+                = solve(problem, constraints, As, n, verbose=0)
             execution_times.append(execution_time)
         mean = round(np.mean(execution_times) * 1000, 5)
         std = round(np.std(execution_times) * 1000, 5)
