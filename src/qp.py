@@ -22,14 +22,18 @@ def generate_Q(dim: int, rank: float, eccentricity: float) -> np.ndarray:
     # there might be small numerical errors that make them complex with a negligible imaginary part (e.g., 1e-17),
     D = D.real
     V = V.real
+    # sort the eigenvalues and the corresponding eigenvectors in ascending order since np.linalg.eig does not
+    # guarantee this
+    sort_indices = np.argsort(D)
+    D = D[sort_indices]
+    V = V[:, sort_indices]
     # moreover, when this happens, even the real part might result slightly negative (e.g., -1e-17),
     # so we set it to 0
     D = np.maximum(D, 0)
 
-    n = dim - 1
-    if D[n] > 1e-14:
-        l = (D[n] * np.ones(dim) + (D[n] / (D[0] - D[n] + 1e-14)) * (2 * eccentricity / (1 - eccentricity))
-             * (D - D[n] * np.ones(dim)))
+    if D[0] > 1e-14:
+        l = (D[0] * np.ones(dim) + (D[0] / (D[dim-1] - D[0] + 1e-14)) * (2 * eccentricity / (1 - eccentricity))
+             * (D - D[0] * np.ones(dim)))
         Q = np.linalg.multi_dot([V, np.diag(l), V.T])
     return Q
 
