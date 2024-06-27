@@ -171,7 +171,7 @@ class QP:
         Returns the minimum value of the quadratic function.
         """
 
-        x_minimum = -np.dot(np.linalg.pinv(self._subQ), self._subq)
+        x_minimum = np.dot(np.linalg.pinv(self._subQ), -self._subq)
         return self.evaluate(x_minimum)
 
     def set_subproblem(self, indexes: list):
