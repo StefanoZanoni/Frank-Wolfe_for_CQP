@@ -46,7 +46,7 @@ class ExactLineSearch(LineSearch):
         :return: The step size alpha.
         """
 
-        den = np.dot(np.dot(pk.T, self.f.get_Q()), pk)
+        den = np.linalg.multi_dot([pk.T, self.f.get_Q(), pk])
         if den <= 1e-16:
             alpha = 1
         else:
