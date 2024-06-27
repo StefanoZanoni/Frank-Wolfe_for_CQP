@@ -178,15 +178,22 @@ class QP:
 
         return np.dot(self._subQ, x) + self._subq
 
-    def minimum(self):
+    def minimum_point(self) -> np.ndarray:
+        """
+        Returns the point where the minimum value of the quadratic function is achieved.
+        """
+
+        x_minimum = np.dot(np.linalg.pinv(self._subQ), -self._subq)
+        return x_minimum
+
+    def minimum(self) -> float:
         """
         Returns the minimum value of the quadratic function.
         """
 
-        x_minimum = np.dot(np.linalg.pinv(self._subQ), -self._subq)
-        return self.evaluate(x_minimum)
+        return self.evaluate(self.minimum_point())
 
-    def set_subproblem(self, indexes: list):
+    def set_subproblem(self, indexes: list) -> None:
         """
         Sets the subproblem by selecting specific indexes.
 
@@ -197,8 +204,8 @@ class QP:
         self._subQ = self._Q[indexes][:, indexes]
         self._subq = self._q[indexes]
 
-    def get_Q(self):
+    def get_Q(self) -> np.ndarray:
         return self._subQ
 
-    def get_q(self):
+    def get_q(self) -> np.ndarray:
         return self._subQ
