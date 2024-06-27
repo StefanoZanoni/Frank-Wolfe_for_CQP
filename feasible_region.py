@@ -122,7 +122,7 @@ def main():
         solve(problem, constraints, As, n, max_iter=max_iterations, verbose=verbose))
 
     # Visualize the feasible region for the entire problem and the optimal solution
-    plot_feasible_region(A_agg, b_agg, box_min=0, box_max=1, optimal_solution=solution, optimal_minimums=optimal_minimums)
+    plot_feasible_region(A_agg, b_agg, box_min=0, box_max=1, optimal_solution=solution)
 
     print(f"Execution Time: {round(execution_time * 1000, 4)} ms")
     print(f"Iterations for each sub-problem: {iterations}")
