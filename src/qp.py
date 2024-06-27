@@ -22,23 +22,22 @@ def generate_Q(dim: int, rank: float, eccentricity: float) -> np.ndarray:
     # there might be small numerical errors that make them complex with a negligible imaginary part (e.g., 1e-17),
     D = D.real
     V = V.real
-    # sort the eigenvalues in ascending order since np.linalg.eig does not guarantee this
-    sort_indices = np.argsort(D)
-    D = D[sort_indices]
-    V = V[:, sort_indices]
-    # moreover, when this happens also the real part might result slightly negative (e.g., -1e-17), so we set it to 0
+    # moreover, when this happens, even the real part might result slightly negative (e.g., -1e-17),
+    # so we set it to 0
     D = np.maximum(D, 0)
 
-    if D[0] > 1e-14:
-        l = (D[0] * np.ones(dim) + (D[0] / (D[dim-1] - D[0] + 1e-14)) * (2 * eccentricity / (1 - eccentricity))
-             * (D - D[0] * np.ones(dim)))
+    n = dim - 1
+    if D[n] > 1e-14:
+        l = (D[n] * np.ones(dim) + (D[n] / (D[0] - D[n] + 1e-14)) * (2 * eccentricity / (1 - eccentricity))
+             * (D - D[n] * np.ones(dim)))
         Q = np.linalg.multi_dot([V, np.diag(l), V.T])
     return Q
 
 
 def generate_q(dim: int, Q: np.ndarray, active: float) -> np.ndarray:
     """
-    Generates a random vector 'z' based on the given parameters and returns the dot product of '-Q' and 'z'.
+    Generates the minimum unconstrained vector 'z'
+    based on the given parameters and returns the dot product of '-Q' and 'z'.
 
     Parameters:
     - dim (int): The dimension of the vector q.
@@ -49,19 +48,28 @@ def generate_q(dim: int, Q: np.ndarray, active: float) -> np.ndarray:
     - np.ndarray: The q vector.
     """
 
-    # in our case, the upper bound of the box is 1 so u was simply omitted
+    # in our case, the upper bound of the box is 1 and the lower bound is 0
 
     z = np.zeros(dim)
+
+    # probability of being outside the box
     outb = np.random.rand(dim) <= active
+
+    # 50/50 of being left of the lower bound or right of the upper bound
     lr = np.random.rand(dim) <= 0.5
     l = np.logical_and(outb, lr)
     r = np.logical_and(outb, np.logical_not(lr))
-    z[l] = -np.random.rand(np.sum(l))
-    z[r] = (1 + np.random.rand(np.sum(r)))
+
+    # a small random amount to the left of the lower bound
+    z[l] -= np.random.rand(np.sum(l))
+    # a small random amount to the right of the upper bound
+    z[r] += 1 + np.random.rand(np.sum(r))
+
+    # entries that will be inside the bound
     outb = np.logical_not(outb)
     z[outb] = np.random.rand(np.sum(outb))
 
-    return -np.dot(Q, z)
+    return np.dot(-z.T, Q)
 
 
 class QP:
