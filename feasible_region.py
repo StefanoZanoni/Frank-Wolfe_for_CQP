@@ -34,11 +34,6 @@ def plot_feasible_region(A, b, box_min, box_max, resolution=100, optimal_solutio
         plt.scatter(feasible_points[:, 0], feasible_points[:, 1], s=1)
         if optimal_solution is not None:
             plt.scatter(optimal_solution[0], optimal_solution[1], color='red', marker='x')
-        """if optimal_minimums is not None:
-            if isinstance(optimal_minimums, np.ndarray):
-                optimal_minimums = [optimal_minimums]
-            for min_point in optimal_minimums:
-                plt.scatter(min_point[0], min_point[1], color='blue', marker='o')"""
         plt.xlim(box_min, box_max)
         plt.ylim(box_min, box_max)
         plt.xlabel('x1')
@@ -50,11 +45,7 @@ def plot_feasible_region(A, b, box_min, box_max, resolution=100, optimal_solutio
         ax.scatter(feasible_points[:, 0], feasible_points[:, 1], feasible_points[:, 2], s=1)
         if optimal_solution is not None:
             ax.scatter(optimal_solution[0], optimal_solution[1], optimal_solution[2], color='red', marker='x')
-        """if optimal_minimums is not None:
-            if isinstance(optimal_minimums, np.ndarray):
-                optimal_minimums = [optimal_minimums]
-            for min_point in optimal_minimums:
-                ax.scatter(min_point[0], min_point[1], min_point[2], color='blue', marker='o')"""
+        
         ax.set_xlim(box_min, box_max)
         ax.set_ylim(box_min, box_max)
         ax.set_zlim(box_min, box_max)
