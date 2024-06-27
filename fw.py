@@ -53,7 +53,7 @@ def main():
     problem = QP(n, rank=rank, eccentricity=eccentricity, active=active, c=False)
 
     solution, execution_time, iterations, _, _, optimal_minimums, approximated_minimums = (
-        solve(problem, constraints, As, n, max_iter=max_iterations, verbose=verbose, plot=True, dirname='./'))
+        solve(problem, constraints, As, n, max_iter=max_iterations, verbose=verbose, plot=True))
 
     print(f"Execution Time: {round(execution_time * 1000, 4)} ms")
     print(f"Iterations for each sub-problem: {iterations}")
