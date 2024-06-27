@@ -75,7 +75,6 @@ def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 100
         gaps[i] = gap
         if gap < eps:
             convergence_rates[i] = 1
-            i += 1
             if verbose == 1:
                 print(f'Iteration {i}: status = approximated, v = {v}, gap = {gap}')
             break

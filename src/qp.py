@@ -32,7 +32,7 @@ def generate_Q(dim: int, rank: float, eccentricity: float) -> np.ndarray:
     D = np.maximum(D, 0)
 
     if D[0] > 1e-14:
-        l = (D[0] * np.ones(dim) + (D[0] / (D[dim-1] - D[0] + 1e-14)) * (2 * eccentricity / (1 - eccentricity))
+        l = (D[0] * np.ones(dim) + (D[0] / (D[dim-1] - D[0])) * (2 * eccentricity / (1 - eccentricity))
              * (D - D[0] * np.ones(dim)))
         Q = np.linalg.multi_dot([V, np.diag(l), V.T])
     return Q
