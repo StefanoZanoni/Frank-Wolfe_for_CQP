@@ -60,6 +60,21 @@ def plot_feasible_region(A, b, box_min, box_max, resolution=100, optimal_solutio
     print(f"Feasible region plot saved as {filename}")
 
 
+def quadratic_function(x, Q, q): 
+    """
+    Args:
+    x (numpy.ndarray): Input vector.
+    Q (numpy.ndarray): Symmetric matrix.
+    q (numpy.ndarray): Vector.
+
+    Returns:
+        float: Value of the quadratic function.
+    """
+    quadratic_term = 0.5 * np.dot(x.T, np.dot(Q, x))
+    linear_term = np.dot(q.T, x)
+    return quadratic_term + linear_term
+        
+
 def main():
     parser = argparse.ArgumentParser(description='This is a program to solve optimization problems using the '
                                                  'Frank-Wolfe algorithm.')
@@ -112,15 +127,14 @@ def main():
     solution, execution_time, iterations, _, _, optimal_minimums, approximated_minimums = (
         solve(problem, constraints, As, n, max_iter=max_iterations, verbose=verbose))
 
-    # Visualize the feasible region for the entire problem and the optimal solution
     plot_feasible_region(A_agg, b_agg, box_min=0, box_max=1, optimal_solution=solution)
-
     print(f"Execution Time: {round(execution_time * 1000, 4)} ms")
     print(f"Iterations for each sub-problem: {iterations}")
     print(f'Founded solution: {solution}')
+    print(f'Optimal solution: {problem.minimum_point()}')
     print(f'Optimal minimums: {optimal_minimums}')
     print(f'Approximated minimums: {approximated_minimums}')
 
-
+    
 if __name__ == '__main__':
     main()
