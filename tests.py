@@ -27,7 +27,7 @@ def dump_json(data, filename):
 
 
 def calculate_mean_std(data):
-    return round(np.mean(data) * 1000, 5), round(np.std(data) * 1000, 5)
+    return round(np.mean(data), 5), round(np.std(data), 5)
 
 
 def plot_and_save(data, xlabel, ylabel, filename):
@@ -63,6 +63,8 @@ def random_test():
     b = create_b()
     iterations_mean_list = []
     execution_times = []
+    mean_convergence_list = []
+    mean_gaps = []
     for n in tqdm(test_dimensions):
         Is = create_index_sets(n, uniform=False)
         As = [create_A(n, I) for I in Is]
@@ -86,22 +88,71 @@ def random_test():
                 'execution_time': execution_time, 'iterations': iterations}
         dump_json(data, f'tests/dimension_{n}/random_results.json')
 
+        gap_list = []
         for i, gaps in enumerate(all_gaps):
+            gap_list.append(gaps[-1])
             for j, gap in enumerate(gaps):
                 if gap != 0:
                     gaps[j] = np.log1p(gap)
-            plot_and_save(gaps, 'Iteration', 'Gap (log scale)', f'tests/dimension_{n}/subproblem_{i}_gap.png')
+            plot_and_save(gaps, 'Iteration', 'Gap (log scale)',
+                          f'tests/dimension_{n}/subproblem_{i}_gap.png')
+        mean_gap = round(np.mean(gap_list), 5)
+        mean_gaps.append(mean_gap)
+        new_data = {'mean_gap': mean_gap}
+        append_to_json_file(new_data, f'tests/dimension_{n}/random_results.json')
 
+        convergences = []
         for i, convergence_rates in enumerate(all_convergence_rates):
             plot_and_save(convergence_rates, 'Iteration', 'Convergence rate',
                           f'tests/dimension_{n}/subproblem_{i}_convergence_rate.png')
+            if len(convergence_rates) > 0:
+                convergences.append(convergence_rates[-1])
+        if len(convergences) > 0:
+            mean_convergence_rate = round(np.mean(convergences), 5)
+            mean_convergence_list.append(mean_convergence_rate)
+            new_data = {'mean_convergence_rate': mean_convergence_rate}
+            append_to_json_file(new_data, f'tests/dimension_{n}/random_results.json')
 
     mean_execution_times = round(np.mean(execution_times) * 1000, 5)
     mean_iterations = round(np.mean(iterations_mean_list))
     max_iterations_percentage = round(iteration_limit_number / iterations_number, 3) * 100
+    mean_convergence_rate = round(np.mean(mean_convergence_list), 5)
+    std_convergence_rate = round(np.std(mean_convergence_list), 5)
+    mean_gap = round(np.mean(mean_gaps), 5)
+    std_gap = round(np.std(mean_gaps), 5)
     data = {'max_iteration_percentage': max_iterations_percentage, 'mean_iterations': mean_iterations,
-            'mean_execution_time (ms)': mean_execution_times}
+            'mean_execution_time (ms)': mean_execution_times,
+            'mean_convergence_rate': mean_convergence_rate, 'std_convergence_rate': std_convergence_rate,
+            'mean_gap': mean_gap, 'std_gap': std_gap}
     dump_json(data, 'tests/statistics.json')
+
+
+def test_scaling(n: int, As: list[np.ndarray], constraints: list[BoxConstraints], rank: float, eccentricity: float,
+                 active: float, filename: str, json_variable) -> None:
+    problem = QP(n, rank=rank, eccentricity=eccentricity, active=active, c=False, seed=seed)
+
+    execution_times = []
+    gap_list = []
+    convergence_list = []
+    for _ in range(100):
+        _, execution_time, _, all_gaps, all_convergence_rates, optimal_minimums, approximated_minimums \
+            = solve(problem, constraints, As, n, verbose=0)
+        execution_times.append(execution_time)
+        gap_list.append(np.mean([gaps[-1] for gaps in all_gaps]))
+        convergence_list.append(np.mean([convergence_rates[-1] for convergence_rates in all_convergence_rates]))
+    mean_time, std_time = calculate_mean_std(execution_times)
+    mean_gap, std_gap = calculate_mean_std(gap_list)
+    mean_convergence, std_convergence = calculate_mean_std(convergence_list)
+    mean_time *= 1000
+    std_time *= 1000
+
+    new_data = {f'mean_execution_time_{json_variable} (ms)': mean_time,
+                f'standard_deviation_{json_variable} (ms)': std_time,
+                f'mean_gap_{json_variable}': mean_gap,
+                f'standard_deviation_gap_{json_variable}': std_gap,
+                f'mean_convergence_{json_variable}': mean_convergence,
+                f'standard_deviation_convergence_{json_variable}': std_convergence}
+    append_to_json_file(new_data, filename)
 
 
 def test_dimension_scaling():
@@ -120,17 +171,7 @@ def test_dimension_scaling():
         As = [create_A(n, I) for I in Is]
 
         constraints = [BoxConstraints(A, b, ineq=True) for A in As]
-        problem = QP(n, rank=rank, eccentricity=eccentricity, active=active, c=False, seed=seed)
-
-        execution_times = []
-        for _ in range(100):
-            _, execution_time, _, _, _, optimal_minimums, approximated_minimums \
-                = solve(problem, constraints, As, n, verbose=0)
-            execution_times.append(execution_time)
-        mean, std = calculate_mean_std(execution_times)
-
-        new_data = {f'mean_execution_time_dimension_{n} (ms)': mean, f'standard_deviation_dimension_{n} (ms)': std}
-        append_to_json_file(new_data, f'tests/dimension_scaling.json')
+        test_scaling(n, As, constraints, rank, eccentricity, active, 'tests/dimension_scaling.json', n)
 
 
 def test_rank_scaling():
@@ -148,17 +189,7 @@ def test_rank_scaling():
     dump_json(data, 'tests/rank_scaling.json')
 
     for rank in tqdm(test_ranks):
-        problem = QP(n, rank=rank, eccentricity=eccentricity, active=active, c=False, seed=seed)
-
-        execution_times = []
-        for _ in range(100):
-            _, execution_time, _, _, _, optimal_minimums, approximated_minimums \
-                = solve(problem, constraints, As, n, verbose=0)
-            execution_times.append(execution_time)
-        mean, std = calculate_mean_std(execution_times)
-
-        new_data = {f'mean_execution_time_rank_{rank} (ms)': mean, f'standard_deviation_dimension_{rank} (ms)': std}
-        append_to_json_file(new_data, f'tests/rank_scaling.json')
+        test_scaling(n, As, constraints, rank, eccentricity, active, 'tests/rank_scaling.json', rank)
 
 
 def test_eccentricity_scaling():
@@ -176,18 +207,7 @@ def test_eccentricity_scaling():
     dump_json(data, 'tests/eccentricity_scaling.json')
 
     for eccentricity in tqdm(test_eccentricities):
-        problem = QP(n, rank=rank, eccentricity=eccentricity, active=active, c=False, seed=seed)
-
-        execution_times = []
-        for _ in range(100):
-            _, execution_time, _, _, _, optimal_minimums, approximated_minimums \
-                = solve(problem, constraints, As, n, verbose=0)
-            execution_times.append(execution_time)
-        mean, std = calculate_mean_std(execution_times)
-
-        new_data = {f'mean_execution_time_eccentricity_{eccentricity} (ms)': mean,
-                    f'standard_deviation_eccentricity_{eccentricity} (ms)': std}
-        append_to_json_file(new_data, f'tests/eccentricity_scaling.json')
+        test_scaling(n, As, constraints, rank, eccentricity, active, 'tests/eccentricity_scaling.json', eccentricity)
 
 
 def test_active_scaling():
@@ -205,17 +225,7 @@ def test_active_scaling():
     dump_json(data, 'tests/active_scaling.json')
 
     for active in tqdm(test_actives):
-        problem = QP(n, rank=rank, eccentricity=eccentricity, active=active, c=False, seed=seed)
-
-        execution_times = []
-        for _ in range(100):
-            _, execution_time, _, _, _, optimal_minimums, approximated_minimums \
-                = solve(problem, constraints, As, n, verbose=0)
-            execution_times.append(execution_time)
-        mean, std = calculate_mean_std(execution_times)
-
-        new_data = {f'mean_execution_time_active_{active} (ms)': mean, f'standard_deviation_active_{active} (ms)': std}
-        append_to_json_file(new_data, f'tests/active_scaling.json')
+        test_scaling(n, As, constraints, rank, eccentricity, active, 'tests/active_scaling.json', active)
 
 
 def test():
