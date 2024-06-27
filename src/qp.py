@@ -57,7 +57,7 @@ def generate_q(dim: int, Q: np.ndarray, active: float) -> np.ndarray:
     z = np.zeros(dim)
 
     # probability of being outside the box
-    outb = np.random.rand(dim) <= active
+    outb = np.random.rand(dim) >= active
 
     # 50/50 of being left of the lower bound or right of the upper bound
     lr = np.random.rand(dim) <= 0.5
