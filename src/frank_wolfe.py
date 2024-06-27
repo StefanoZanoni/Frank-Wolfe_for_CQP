@@ -55,9 +55,9 @@ def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 100
     convergence_rates = [0] * max_iter
     minimum = cqp.problem.minimum()
 
-    i = 0
+    i = 1
     v = cqp.problem.evaluate(x)
-    while i < max_iter:
+    while i < max_iter + 1:
         grad = cqp.problem.derivative(x)
 
         # solve the linear minimization oracle
