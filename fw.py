@@ -59,7 +59,7 @@ def main():
     print(f"Iterations for each sub-problem: {iterations}")
     print(f'Founded solution: {solution}')
     print(f'Optimal minimums: {optimal_minimums}')
-    print(f'Approximated minimums: {approximated_minimums}')
+    print(f'Bounded minimums: {approximated_minimums}')
 
 
 if __name__ == '__main__':
