@@ -74,7 +74,16 @@ def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 100
         gap = (v - best_lb) / max(np.abs(v), 1)
         gaps[i] = gap
         if gap < eps:
-            convergence_rates[i] = 1
+
+            # compute the last convergence rate
+            delta_k = v - minimum
+            alpha = ls.compute(x, d)
+            x += alpha * d
+            v = cqp.problem.evaluate(x)
+            delta_k_plus_1 = v - minimum
+            convergence_rate = delta_k_plus_1 / delta_k
+            convergence_rates[i] = convergence_rate
+
             if verbose == 1:
                 if gap == 0:
                     print(f'Iteration {i}: status = optimal, v = {v}, gap = {gap}')

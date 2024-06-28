@@ -34,6 +34,20 @@ def main():
                         type=int,
                         default=1,
                         help='The verbosity level. Default is 1.')
+    parser.add_argument('--plot', '-p',
+                        action='store_true',
+                        help='If present, plots will be generated.')
+    parser.add_argument('--directory', '-d',
+                        type=str,
+                        default='./',
+                        help='the directory where to save the plots. Default is current directory.'
+                             ' Ignored if --plot or -p is not present')
+    parser.add_argument('--pltrange', '-pr',
+                        type=tuple[float],
+                        default=(0, 1),
+                        help='The range of the axis for the plot. Default is (0, 1).'
+                             ' Axis_range[0] is the minimum value, axis_range[1] is the maximum value.'
+                             ' Ignored if --plot or -p is not present.')
     args = parser.parse_args()
 
     n = args.dimensions
@@ -42,6 +56,9 @@ def main():
     active = args.active
     max_iterations = args.iterations
     verbose = args.verbose
+    plot = args.plot
+    directory = args.directory
+    axis_range = args.pltrange
     if verbose != 0:
         verbose = 1
 
@@ -53,7 +70,8 @@ def main():
     problem = QP(n, rank=rank, eccentricity=eccentricity, active=active, c=False)
 
     solution, execution_time, iterations, _, _, optimal_minimums, constrained_minimums, positions = (
-        solve(problem, constraints, As, n, max_iter=max_iterations, verbose=verbose, plot=False, axis_range=(0, 1)))
+        solve(problem, constraints, As, n, max_iter=max_iterations, verbose=verbose, plot=plot,
+              axis_range=axis_range, dirname=directory))
 
     print(f"Execution Time: {round(execution_time * 1000, 4)} ms")
     print(f"Iterations for each sub-problem: {iterations}")
