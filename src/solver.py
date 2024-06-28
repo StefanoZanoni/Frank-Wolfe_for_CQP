@@ -1,4 +1,3 @@
-import matplotlib.pyplot as plt
 import plotly.graph_objects as go
 import numpy as np
 import time
@@ -9,11 +8,14 @@ from src.qp import QP
 from src.constraints import BoxConstraints
 
 
-def plot_bcqp(bcqp: BCQP, bounded_minimum_point: np.ndarray, bounded_minimum: float, filename: str) -> None:
+def plot_bcqp(bcqp: BCQP, bounded_minimum_point: np.ndarray, bounded_minimum: float, filename: str,
+              axis_range: tuple[float] = (-10, 10)) -> None:
+    min_value = axis_range[0]
+    max_value = axis_range[1]
 
     if bcqp.problem.get_dim() == 1:
-        x_values = np.linspace(-10, 10, 400)
-        x_values_constrained = np.linspace(0, 1, 400)
+        x_values = np.linspace(min_value, max_value, 400)
+        x_values_constrained = np.linspace(0, 1, 3)
 
         # Calculate the corresponding y values
         y_values = np.array([bcqp.problem.evaluate(np.array([x])) for x in x_values])
@@ -52,8 +54,8 @@ def plot_bcqp(bcqp: BCQP, bounded_minimum_point: np.ndarray, bounded_minimum: fl
         fig.update_layout(title='Quadratic Function Plot', xaxis_title='x', yaxis_title='f(x)')
 
     elif bcqp.problem.get_dim() == 2:
-        x_values = np.linspace(-40, 40, 400)
-        y_values = np.linspace(-40, 40, 400)
+        x_values = np.linspace(min_value, max_value, 400)
+        y_values = np.linspace(min_value, max_value, 400)
         x_values_constrained = np.linspace(0, 1, 400)
         y_values_constrained = np.linspace(0, 1, 400)
 
@@ -73,6 +75,8 @@ def plot_bcqp(bcqp: BCQP, bounded_minimum_point: np.ndarray, bounded_minimum: fl
                                   for x, y in zip(np.ravel(X_constrained), np.ravel(Y_constrained))])
         Z_constrained = Z_constrained.reshape(X_constrained.shape)
         Z_constrained = Z_constrained[constraints]
+        X_constrained = X_constrained[constraints]
+        Y_constrained = Y_constrained[constraints]
 
         # Create the plot
         fig = go.Figure(data=[go.Surface(z=Z, x=X, y=Y, name='Function surface')])
@@ -91,7 +95,7 @@ def plot_bcqp(bcqp: BCQP, bounded_minimum_point: np.ndarray, bounded_minimum: fl
                                    z=[bounded_minimum],
                                    mode='markers',
                                    name='Constrained Minimum',
-                                   marker=dict(color=[1], colorscale='YlGnBu', size=3)))
+                                   marker=dict(color=[1], colorscale='YlGnBu', size=2)))
 
         # add the global minimum to the plot
         fig.add_trace(go.Scatter3d(x=[bcqp.problem.minimum_point()[0]],
@@ -99,7 +103,7 @@ def plot_bcqp(bcqp: BCQP, bounded_minimum_point: np.ndarray, bounded_minimum: fl
                                    z=[bcqp.problem.minimum()],
                                    mode='markers',
                                    name='Global Minimum',
-                                   marker=dict(color=[1], colorscale='YlOrRd', size=3)))
+                                   marker=dict(color=[1], colorscale='YlOrRd', size=2)))
 
         # Add title and labels
         fig.update_layout(title='Quadratic Function Plot', xaxis_title='x', yaxis_title='f(x)',
@@ -121,7 +125,7 @@ def plot_bcqp(bcqp: BCQP, bounded_minimum_point: np.ndarray, bounded_minimum: fl
 
 
 def solve(problem: QP, constraints: list[BoxConstraints], As: list[np.ndarray], n: int, max_iter: int = 1000,
-          verbose: int = 1, plot: bool = False, dirname: str = './') \
+          verbose: int = 1, plot: bool = False, dirname: str = './', axis_range: tuple[float] = (-10, 10)) \
         -> tuple[np.ndarray, float, list, list[list], list[list], list[float], list[float]]:
     """
     Solve the optimization problem for each index set.
@@ -130,10 +134,18 @@ def solve(problem: QP, constraints: list[BoxConstraints], As: list[np.ndarray], 
     :param constraints: The constraints of the problem.
     :param As: The matrices of constraints.
     :param n: The dimension of the problem.
+    Default is 10.
     :param max_iter: The maximum number of iterations.
+    Default is 1000.
     :param verbose: The verbosity level.
+    Default is 1.
     :param plot: Whether to plot the results.
+    Default is False.
     :param dirname: The directory where to save the plots.
+    Default is './'.
+    :param axis_range: The range of the axis for the plot.
+    Default is (-10, 10).
+     Axis_range[0] is the minimum value, axis_range[1] is the maximum value.
     :return: The optimal solution, execution time, the number of iterations,
     all the gap histories, all the convergence rate histories, the optimal minimums and the approximated minimums.
     """
@@ -172,7 +184,7 @@ def solve(problem: QP, constraints: list[BoxConstraints], As: list[np.ndarray], 
             print('\n')
         if plot:
             filename = dirname + f'plot_bcqp_{k}.png'
-            plot_bcqp(bcqp, x_i, v_i, filename)
+            plot_bcqp(bcqp, x_i, v_i, filename, axis_range=axis_range)
     end = time.time()
 
     return x_optimal, end - start, iterations, all_gaps, all_convergence_rates, optimal_minimums, approximated_minimums

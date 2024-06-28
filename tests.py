@@ -135,7 +135,7 @@ def test_scaling(n: int, As: list[np.ndarray], constraints: list[BoxConstraints]
     gap_list = []
     convergence_list = []
     for _ in range(100):
-        _, execution_time, _, all_gaps, all_convergence_rates, optimal_minimums, approximated_minimums \
+        _, execution_time, _, all_gaps, all_convergence_rates, optimal_minimums, constrained_minimums \
             = solve(problem, constraints, As, n, verbose=0)
         execution_times.append(execution_time)
         gap_list.append(np.mean([gaps[-1] for gaps in all_gaps]))
