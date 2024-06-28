@@ -126,7 +126,7 @@ def plot_bcqp(bcqp: BCQP, bounded_minimum_point: np.ndarray, bounded_minimum: fl
 
 def solve(problem: QP, constraints: list[BoxConstraints], As: list[np.ndarray], n: int, max_iter: int = 1000,
           verbose: int = 1, plot: bool = False, dirname: str = './', axis_range: tuple[float] = (-10, 10)) \
-        -> tuple[np.ndarray, float, list, list[list], list[list], list[float], list[float]]:
+        -> tuple[np.ndarray, float, list, list[list], list[list], list[float], list[float], list[str]]:
     """
     Solve the optimization problem for each index set.
 
@@ -147,7 +147,8 @@ def solve(problem: QP, constraints: list[BoxConstraints], As: list[np.ndarray], 
     Default is (-10, 10).
      Axis_range[0] is the minimum value, axis_range[1] is the maximum value.
     :return: The optimal solution, execution time, the number of iterations,
-    all the gap histories, all the convergence rate histories, the optimal minimums and the approximated minimums.
+    all the gap histories, all the convergence rate histories, the optimal minimums, the approximated minimums
+     and the positions, inside or on the edge of the feasible region.
     """
 
     x_optimal = np.empty(n)
@@ -156,11 +157,12 @@ def solve(problem: QP, constraints: list[BoxConstraints], As: list[np.ndarray], 
     all_convergence_rates = []
     optimal_minimums = []
     approximated_minimums = []
-
+    positions = []
     start = time.time()
     for k, c in enumerate(constraints):
         if verbose == 1:
             print(f'Sub problem {k}')
+
         # compute the indexes of k-th index set I
         indexes = As[k][0] != 0
         # initialize the starting point
@@ -175,11 +177,17 @@ def solve(problem: QP, constraints: list[BoxConstraints], As: list[np.ndarray], 
                                                                    verbose=verbose)
         # merge the subproblem solution with the optimal solution
         x_optimal[indexes] = x_i
+
         iterations.append(iteration)
         all_gaps.append(gaps)
         all_convergence_rates.append(convergence_rates)
         optimal_minimums.append(bcqp.problem.minimum())
         approximated_minimums.append(v_i)
+
+        # check the position of the solution found
+        position = bcqp.constraints.check_KKT(x_i, bcqp.problem.derivative)
+        positions.append(position)
+
         if verbose == 1:
             print('\n')
         if plot:
@@ -187,4 +195,5 @@ def solve(problem: QP, constraints: list[BoxConstraints], As: list[np.ndarray], 
             plot_bcqp(bcqp, x_i, v_i, filename, axis_range=axis_range)
     end = time.time()
 
-    return x_optimal, end - start, iterations, all_gaps, all_convergence_rates, optimal_minimums, approximated_minimums
+    return (x_optimal, end - start, iterations, all_gaps, all_convergence_rates, optimal_minimums,
+            approximated_minimums, positions)

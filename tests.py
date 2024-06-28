@@ -75,7 +75,7 @@ def random_test():
         random_rank = np.random.uniform(0.01, 1.01)
         random_active = round(np.random.uniform(0, 1), 1)
         problem = QP(n, rank=random_rank, eccentricity=random_eccentricity, active=random_active, c=False)
-        _, execution_time, iterations, all_gaps, all_convergence_rates, _, _ = \
+        _, execution_time, iterations, all_gaps, all_convergence_rates, _, _, positions = \
             solve(problem, constraints, As, n, verbose=0)
 
         execution_times.append(execution_time)
@@ -85,7 +85,7 @@ def random_test():
         iteration_limit_number += iterations.count(1000)
 
         data = {'rank': random_rank, 'eccentricity': random_eccentricity, 'active': random_active,
-                'execution_time': execution_time, 'iterations': iterations}
+                'execution_time': execution_time, 'iterations': iterations, 'positions': positions}
         dump_json(data, f'tests/dimension_{n}/random_results.json')
 
         gap_list = []
@@ -135,7 +135,7 @@ def test_scaling(n: int, As: list[np.ndarray], constraints: list[BoxConstraints]
     gap_list = []
     convergence_list = []
     for _ in range(100):
-        _, execution_time, _, all_gaps, all_convergence_rates, optimal_minimums, constrained_minimums \
+        _, execution_time, _, all_gaps, all_convergence_rates, optimal_minimums, constrained_minimums, _ \
             = solve(problem, constraints, As, n, verbose=0)
         execution_times.append(execution_time)
         gap_list.append(np.mean([gaps[-1] for gaps in all_gaps]))

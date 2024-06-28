@@ -22,11 +22,12 @@ class Constraints:
     """
 
     def __init__(self, A: np.ndarray, b: np.ndarray, ineq: bool = True) -> None:
-        self.A = A
+        self.A = A.copy()
         self._subA = A
-        self.b = b
+        self.b = b.copy()
         self.ineq = ineq
         self.num_constraints = len(b)
+        self._tol = 1e-8
 
     def evaluate(self, x: np.ndarray) -> np.ndarray or bool:
         """
@@ -42,9 +43,89 @@ class Constraints:
 
         """
         if self.ineq:
-            return (np.dot(self._subA, x) <= self.b + 1e-8).all()
+            return (np.dot(self._subA, x) <= self.b + self._tol).all()
         else:
-            return (np.dot(self._subA, x) == self.b + 1e-8).all()
+            return (np.dot(self._subA, x) == self.b + self._tol).all()
+
+    def active_constraints(self, x: np.ndarray) -> np.ndarray:
+        """
+        Returns the indexes of the active constraints at a given point x.
+
+        Parameters:
+        - x (np.ndarray): The point at which to evaluate the constraints.
+
+        Returns:
+        - active (np.ndarray): The indexes of the active constraints.
+
+        """
+        if self.ineq:
+            return np.dot(self._subA, x) <= self.b + self._tol
+        else:
+            return np.dot(self._subA, x) == self.b + self._tol
+
+    def check_KKT(self, x: np.ndarray, derivative: callable(np.ndarray)) -> str:
+        """
+        Checks the KKT conditions at a given point x.
+
+        Parameters:
+        - x (np.ndarray): The point at which to check the KKT conditions.
+        - derivative (callable): The derivative of the objective function.
+
+        Returns:
+        - message (str): A message indicating whether the solution is inside or on the edge of the feasible region.
+
+        """
+        grad = derivative(x)
+
+        # Identify the active constraints
+        active = self.active_constraints(x)
+        num_active = sum(active)
+
+        # Calculate the lagrangian multipliers
+        mu = np.zeros(self.num_constraints)
+        if num_active > 0:
+            A_active = self._subA[active, :]
+            mu[active] = np.linalg.lstsq(A_active.T, grad, rcond=None)[0]
+
+        if num_active > 0:
+            stationarity = np.allclose(grad, np.dot(self._subA.T, mu), atol=self._tol)
+        else:
+            stationarity = False
+
+        if self.ineq:
+            first_condition = np.all(np.dot(self._subA, x) <= self.b + self._tol)
+        else:
+            first_condition = np.all(np.dot(self._subA, x) == self.b + self._tol)
+
+        # In our case the second condition depends on the first constraint since the second constraint
+        # is the negative of the first due to the decomposition of the equality constraint into two inequalities.
+        if num_active == 2:
+            mu[mu < 0] = mu[mu > 0]
+            second_condition = np.all(mu >= -self._tol)
+        elif num_active == 1:
+            if active[0]:
+                second_condition = m[0] >= -self._tol
+            else:
+                second_condition = m[0] <= self._tol
+                if m[0] < 0:
+                    m[0] = -m[0]
+        else:
+            second_condition = True
+
+        if first_condition and second_condition and stationarity:
+            if (mu[active] > 0).all():
+                return 'inside'
+            else:
+                return 'on the edge'
+        elif not first_condition:
+            return 'outside'
+        elif not second_condition:
+            return 'non optimal'
+        else:
+            if (mu[active] > 0).all():
+                return 'not stationary (inside)'
+            else:
+                return 'not stationary (on the edge)'
 
     def set_subproblem(self, indexes: np.ndarray) -> None:
         """

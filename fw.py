@@ -52,14 +52,15 @@ def main():
     constraints = [BoxConstraints(A, b, ineq=True) for A in As]
     problem = QP(n, rank=rank, eccentricity=eccentricity, active=active, c=False)
 
-    solution, execution_time, iterations, _, _, optimal_minimums, constrained_minimums = (
-        solve(problem, constraints, As, n, max_iter=max_iterations, verbose=verbose, plot=True, axis_range=(0, 1)))
+    solution, execution_time, iterations, _, _, optimal_minimums, constrained_minimums, positions = (
+        solve(problem, constraints, As, n, max_iter=max_iterations, verbose=verbose, plot=False, axis_range=(0, 1)))
 
     print(f"Execution Time: {round(execution_time * 1000, 4)} ms")
     print(f"Iterations for each sub-problem: {iterations}")
     print(f'Founded solution: {solution}')
     print(f'Optimal minimums: {optimal_minimums}')
     print(f'Constrained minimums: {constrained_minimums}')
+    print(f'Positions in the feasible region: {positions}')
 
 
 if __name__ == '__main__':
