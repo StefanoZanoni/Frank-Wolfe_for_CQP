@@ -75,57 +75,45 @@ class Constraints:
         - message (str): A message indicating whether the solution is inside or on the edge of the feasible region.
 
         """
+
+        # The lagrangian function is L(x, v, lambda) = x^TQx + q^Tx - lambda * x + v (a^T x - b)
+        # where a is the vector of ones and b is 1.
+        # Its gradient is grad_L(x, v, lambda) = Qx + q - lambda + v * a
+
         grad = derivative(x)
 
-        # Identify the active constraints
-        active = self.active_constraints(x)
-        num_active = sum(active)
+        a = np.ones_like(x)
+        n = len(x)
 
-        # Calculate the lagrangian multipliers
-        mu = np.zeros(self.num_constraints)
-        if num_active > 0:
-            A_active = self._subA[active, :]
-            mu[active] = np.linalg.lstsq(A_active.T, grad, rcond=None)[0]
+        # compute v, the lagrangian multiplier for the equality constraint (summation of x_i = 1)
+        v = -np.dot(a.T, grad) / n
 
-        if num_active > 0:
-            stationarity = np.allclose(grad, np.dot(self._subA.T, mu), atol=self._tol)
-        else:
-            stationarity = False
+        # compute lambda, the lagrangian multiplier for the inequality constraint (x_i >= 0)
+        lambda_ = grad + v * a
 
-        if self.ineq:
-            first_condition = np.all(np.dot(self._subA, x) <= self.b + self._tol)
-        else:
-            first_condition = np.all(np.dot(self._subA, x) == self.b + self._tol)
+        grad_L = grad + lambda_ + v * a
 
-        # In our case, the second condition depends on the first constraint since the second constraint
-        # is the negative of the first due to the decomposition of the equality constraint into two inequalities.
-        if num_active == 2:
-            mu[mu < 0] = mu[mu > 0]
-            second_condition = np.all(mu >= -self._tol)
-        elif num_active == 1:
-            if active[0]:
-                second_condition = mu[0] >= -self._tol
+        # Check the KKT conditions
+        primal_feasibility = self.evaluate(x)
+        dual_feasibility = np.all(lambda_ >= -self._tol)
+        complementary_slackness = np.all(np.isclose(lambda_ * x, 0, atol=self._tol))
+        stationarity = np.all(np.isclose(grad_L, 0, atol=self._tol))
+
+        if primal_feasibility and dual_feasibility and complementary_slackness:
+            if stationarity:
+                if np.any(lambda_ > -self._tol):
+                    return "On the edge (optimal)"
+                else:
+                    return "Inside (optimal)"
             else:
-                second_condition = mu[0] <= self._tol
-                if mu[0] < 0:
-                    mu[0] = -mu[0]
-        else:
-            second_condition = True
-
-        if first_condition and second_condition and stationarity:
-            if (mu[active] > 0).all():
-                return 'inside'
+                return "Inside (non-stationary)"
+        elif primal_feasibility:
+            if np.any(lambda_ > -self._tol):
+                return "On the edge (non-optimal)"
             else:
-                return 'on the edge'
-        elif not first_condition:
-            return 'outside'
-        elif not second_condition:
-            return 'non optimal'
+                return "Inside (non-optimal)"
         else:
-            if (mu[active] > 0).all():
-                return 'not stationary (inside)'
-            else:
-                return 'not stationary (on the edge)'
+            return "Outside"
 
     def set_subproblem(self, indexes: np.ndarray) -> None:
         """
@@ -171,7 +159,7 @@ def create_A(n: int, index_set: list) -> np.ndarray:
     - A (numpy.ndarray): The created matrix A.
 
     """
-    A = [[0 for _ in range(n)], [0 for _ in range(n)]]
+    A = [[0 for _ in range(n)], [0 for _ in range(n)], [-1 for _ in range(n)]]
     for i in index_set:
         A[0][i] = 1
         A[1][i] = -1
@@ -186,4 +174,4 @@ def create_b() -> np.ndarray:
     Returns:
     np.array: The vector b.
     """
-    return np.array([1, -1])
+    return np.array([1, -1, 0])
