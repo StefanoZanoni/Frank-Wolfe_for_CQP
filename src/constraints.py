@@ -97,18 +97,18 @@ class Constraints:
         else:
             first_condition = np.all(np.dot(self._subA, x) == self.b + self._tol)
 
-        # In our case the second condition depends on the first constraint since the second constraint
+        # In our case, the second condition depends on the first constraint since the second constraint
         # is the negative of the first due to the decomposition of the equality constraint into two inequalities.
         if num_active == 2:
             mu[mu < 0] = mu[mu > 0]
             second_condition = np.all(mu >= -self._tol)
         elif num_active == 1:
             if active[0]:
-                second_condition = m[0] >= -self._tol
+                second_condition = mu[0] >= -self._tol
             else:
-                second_condition = m[0] <= self._tol
-                if m[0] < 0:
-                    m[0] = -m[0]
+                second_condition = mu[0] <= self._tol
+                if mu[0] < 0:
+                    mu[0] = -mu[0]
         else:
             second_condition = True
 
