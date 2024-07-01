@@ -118,7 +118,7 @@ def plot_bcqp(bcqp: BCQP, bounded_minimum_point: np.ndarray, bounded_minimum: fl
                           ))
 
     else:
-        print("The dimension of the problem is not supported for plotting.")
+        print("The dimension of the problem is not supported for plotting.\n")
         return
 
     fig.write_html(filename + '.html')

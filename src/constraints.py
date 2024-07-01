@@ -100,12 +100,12 @@ class Constraints:
         stationarity = np.all(np.isclose(grad_L, 0, atol=self._tol))
 
         if primal_feasibility and dual_feasibility and complementary_slackness and stationarity:
-            if np.any(lambda_ > -self._tol):
+            if np.any(x == 0):
                 return "On the edge (optimal)"
             else:
                 return "Inside (optimal)"
         elif primal_feasibility:
-            if np.any(lambda_ > -self._tol):
+            if np.any(x == 0):
                 return "On the edge (non-optimal)"
             else:
                 return "Inside (non-optimal)"
