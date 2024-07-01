@@ -99,14 +99,11 @@ class Constraints:
         complementary_slackness = np.all(np.isclose(lambda_ * x, 0, atol=self._tol))
         stationarity = np.all(np.isclose(grad_L, 0, atol=self._tol))
 
-        if primal_feasibility and dual_feasibility and complementary_slackness:
-            if stationarity:
-                if np.any(lambda_ > -self._tol):
-                    return "On the edge (optimal)"
-                else:
-                    return "Inside (optimal)"
+        if primal_feasibility and dual_feasibility and complementary_slackness and stationarity:
+            if np.any(lambda_ > -self._tol):
+                return "On the edge (optimal)"
             else:
-                return "Inside (non-stationary)"
+                return "Inside (optimal)"
         elif primal_feasibility:
             if np.any(lambda_ > -self._tol):
                 return "On the edge (non-optimal)"
