@@ -3,6 +3,7 @@ import os
 import json
 import matplotlib.pyplot as plt
 from tqdm import tqdm
+import itertools
 
 from src.index_set import create_index_sets
 from src.constraints import create_A, create_b
@@ -238,5 +239,93 @@ def test():
     print('All tests done.\n', flush=True)
 
 
+def run_test_combination(n, rank, eccentricity, active):
+    ensure_dir_exists(f'tests/combination_{n}_{rank}_{eccentricity}_{active}')
+    b = create_b()
+    Is = create_index_sets(n, uniform=False)
+    As = [create_A(n, I) for I in Is]
+    constraints = [BoxConstraints(A, b, ineq=True) for A in As]
+
+    problem = QP(n, rank=rank, eccentricity=eccentricity, active=active, c=False, seed=seed)
+    _, execution_time, iterations, all_gaps, all_convergence_rates, _, _, positions = solve(problem, constraints, As, n, verbose=0)
+
+    execution_times = [execution_time]
+    iterations_mean_list = [round(np.mean(iterations))]
+    iteration_limit_number = iterations.count(1000)
+
+    data = {'rank': rank, 'eccentricity': eccentricity, 'active': active, 'execution_time': execution_time, 'iterations': iterations, 'positions': positions}
+    dump_json(data, f'tests/combination_{n}_{rank}_{eccentricity}_{active}/results.json')
+
+    gap_list = []
+    for i, gaps in enumerate(all_gaps):
+        gap_list.append(gaps[-1])
+        for j, gap in enumerate(gaps):
+            if gap != 0:
+                gaps[j] = np.log1p(gap)
+        plot_and_save(gaps, 'Iteration', 'Gap (log scale)', f'tests/combination_{n}_{rank}_{eccentricity}_{active}/subproblem_{i}_gap.png')
+    mean_gap = round(np.mean(gap_list), 5)
+    new_data = {'mean_gap': mean_gap}
+    append_to_json_file(new_data, f'tests/combination_{n}_{rank}_{eccentricity}_{active}/results.json')
+
+    convergences = []
+    for i, convergence_rates in enumerate(all_convergence_rates):
+        plot_and_save(convergence_rates, 'Iteration', 'Convergence rate', f'tests/combination_{n}_{rank}_{eccentricity}_{active}/subproblem_{i}_convergence_rate.png')
+        if len(convergence_rates) > 0:
+            convergences.append(convergence_rates[-1])
+    if len(convergences) > 0:
+        mean_convergence_rate = round(np.mean(convergences), 5)
+        new_data = {'mean_convergence_rate': mean_convergence_rate}
+        append_to_json_file(new_data, f'tests/combination_{n}_{rank}_{eccentricity}_{active}/results.json')
+
+    return execution_time, iterations_mean_list[0], iteration_limit_number, mean_gap, mean_convergence_rate
+
+
+def combined_test():
+    test_dimensions = [50, 100, 150]
+    test_ranks = [0.1, 0.5, 1]
+    test_eccentricities = [0, 0.5, 0.999]
+    test_actives = [0, 0.5, 1]
+
+    parameter_combinations = list(itertools.product(test_dimensions, test_ranks, test_eccentricities, test_actives))
+
+    all_execution_times = []
+    all_iterations = []
+    all_iteration_limits = 0
+    all_gaps = []
+    all_convergence_rates = []
+
+    for combination in tqdm(parameter_combinations):
+        n, rank, eccentricity, active = combination
+        execution_time, mean_iterations, iteration_limit_number, mean_gap, mean_convergence_rate = run_test_combination(n, rank, eccentricity, active)
+        all_execution_times.append(execution_time)
+        all_iterations.append(mean_iterations)
+        all_iteration_limits += iteration_limit_number
+        all_gaps.append(mean_gap)
+        all_convergence_rates.append(mean_convergence_rate)
+
+    mean_execution_time, std_execution_time = calculate_mean_std(all_execution_times)
+    mean_iterations, std_iterations = calculate_mean_std(all_iterations)
+    max_iterations_percentage = round(all_iteration_limits / sum(all_iterations), 3) * 100
+    mean_gap, std_gap = calculate_mean_std(all_gaps)
+    mean_convergence_rate, std_convergence_rate = calculate_mean_std(all_convergence_rates)
+
+    general_stats = {
+        'max_iteration_percentage': max_iterations_percentage,
+        'mean_iterations': mean_iterations,
+        'std_iterations': std_iterations,
+        'mean_execution_time (ms)': mean_execution_time * 1000,
+        'std_execution_time (ms)': std_execution_time * 1000,
+        'mean_convergence_rate': mean_convergence_rate,
+        'std_convergence_rate': std_convergence_rate,
+        'mean_gap': mean_gap,
+        'std_gap': std_gap
+    }
+
+    dump_json(general_stats, 'tests/general_statistics.json')
+
+    print('All combined tests done.\n', flush=True)
+
+
 if __name__ == '__main__':
-    test()
+    combined_test()
+
