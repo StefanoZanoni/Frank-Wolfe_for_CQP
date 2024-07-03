@@ -65,6 +65,11 @@ def random_test():
     execution_times = []
     mean_convergence_list = []
     mean_gaps = []
+    edge = 0
+    inside = 0
+    num_positions = 0
+    one_dimension = 0
+    num_I = 0
     for n in tqdm(test_dimensions):
         Is = create_index_sets(n, uniform=False)
         As = [create_A(n, I) for I in Is]
@@ -78,6 +83,16 @@ def random_test():
         _, execution_time, iterations, all_gaps, all_convergence_rates, _, _, positions = \
             solve(problem, constraints, As, n, verbose=0)
 
+        for position in positions:
+            if 'edge' in position:
+                edge += 1
+            elif 'Inside' in position:
+                inside += 1
+        num_positions += len(positions)
+        for I in Is:
+            if len(I) == 1:
+                one_dimension += 1
+        num_I += len(Is)
         execution_times.append(execution_time)
         iterations_number += len(iterations)
         mean_iterations = round(np.mean(iterations))
@@ -94,6 +109,7 @@ def random_test():
             for j, gap in enumerate(gaps):
                 if gap != 0:
                     gaps[j] = np.log1p(gap)
+            gaps[gaps == 0] = np.min(gaps[gaps != 0])
             plot_and_save(gaps, 'Iteration', 'Gap (log scale)',
                           f'tests/dimension_{n}/subproblem_{i}_gap.png')
         mean_gap = round(np.mean(gap_list), 5)
@@ -120,10 +136,14 @@ def random_test():
     std_convergence_rate = round(np.std(mean_convergence_list), 5)
     mean_gap = round(np.mean(mean_gaps), 5)
     std_gap = round(np.std(mean_gaps), 5)
+    edge_percentage = round(edge / num_positions, 3) * 100
+    inside_percentage = round(inside / num_positions, 3) * 100
+    one_dimension_percentage = round(one_dimension / num_I, 3) * 100
     data = {'max_iteration_percentage': max_iterations_percentage, 'mean_iterations': mean_iterations,
             'mean_execution_time (ms)': mean_execution_times,
             'mean_convergence_rate': mean_convergence_rate, 'std_convergence_rate': std_convergence_rate,
-            'mean_gap': mean_gap, 'std_gap': std_gap}
+            'mean_gap': mean_gap, 'std_gap': std_gap, 'edge_percentage': edge_percentage,
+            'inside_percentage': inside_percentage, 'one_dimension_percentage': one_dimension_percentage}
     dump_json(data, 'tests/statistics.json')
 
 
@@ -135,7 +155,7 @@ def test_scaling(n: int, As: list[np.ndarray], constraints: list[BoxConstraints]
     gap_list = []
     convergence_list = []
     for _ in range(100):
-        _, execution_time, _, all_gaps, all_convergence_rates, optimal_minimums, constrained_minimums, _ \
+        _, execution_time, _, all_gaps, all_convergence_rates, optimal_minimums, constrained_minimums, positions \
             = solve(problem, constraints, As, n, verbose=0)
         execution_times.append(execution_time)
         gap_list.append(np.mean([gaps[-1] for gaps in all_gaps]))
@@ -151,7 +171,8 @@ def test_scaling(n: int, As: list[np.ndarray], constraints: list[BoxConstraints]
                 f'mean_gap_{json_variable}': mean_gap,
                 f'standard_deviation_gap_{json_variable}': std_gap,
                 f'mean_convergence_{json_variable}': mean_convergence,
-                f'standard_deviation_convergence_{json_variable}': std_convergence}
+                f'standard_deviation_convergence_{json_variable}': std_convergence,
+                f'positions_{json_variable}': positions}
     append_to_json_file(new_data, filename)
 
 
@@ -230,10 +251,10 @@ def test_active_scaling():
 
 def test():
     random_test()
-    test_dimension_scaling()
-    test_rank_scaling()
-    test_eccentricity_scaling()
-    test_active_scaling()
+    # test_dimension_scaling()
+    # test_rank_scaling()
+    # test_eccentricity_scaling()
+    # test_active_scaling()
 
     print('All tests done.\n', flush=True)
 
