@@ -49,14 +49,15 @@ def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 100
     ls = ExactLineSearch(cqp.problem)
 
     # gap history
-    gaps = [0] * max_iter
+    gaps = [np.inf] * max_iter
 
     # convergence rate history
-    convergence_rates = [0] * max_iter
+    convergence_rates = [1] * max_iter
     minimum = cqp.problem.minimum()
 
-    i = 1
+    i = 0
     v = cqp.problem.evaluate(x)
+    delta_k = v - minimum
     while i < max_iter:
         grad = cqp.problem.derivative(x)
 
@@ -75,23 +76,12 @@ def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 100
         gaps[i] = gap
         if gap < eps:
 
-            # compute the last convergence rate
-            delta_k = v - minimum
-            alpha = ls.compute(x, d)
-            x += alpha * d
-            v_temp = cqp.problem.evaluate(x)
-            delta_k_plus_1 = v_temp - minimum
-            convergence_rate = delta_k_plus_1 / (delta_k + 1e-10)
-            convergence_rates[i] = convergence_rate
-
             if verbose == 1:
                 if gap == 0:
                     print(f'Iteration {i}: status = optimal, v = {v}, gap = {gap}')
                 else:
                     print(f'Iteration {i}: status = approximated, v = {v}, gap = {gap}')
             break
-
-        delta_k = v - minimum
 
         # line search for alpha
         alpha = ls.compute(x, d)
@@ -101,6 +91,7 @@ def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 100
         delta_k_plus_1 = v - minimum
         convergence_rate = delta_k_plus_1 / delta_k
         convergence_rates[i] = convergence_rate
+        delta_k = delta_k_plus_1
 
         if verbose == 1:
             if i + 1 >= max_iter + 1:
@@ -109,4 +100,7 @@ def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 100
                 print(f'Iteration {i}: status = non optimal, v = {v}, gap = {gap}')
         i += 1
 
-    return x, v, i, gaps[:i + 1], convergence_rates[:i + 1]
+    if i == 0:
+        return x, v, i, [gaps[0]], [convergence_rates[0]]
+    else:
+        return x, v, i, gaps[:i + 1], convergence_rates[:i]
