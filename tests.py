@@ -80,7 +80,7 @@ def random_test():
         random_eccentricity = round(np.random.uniform(0, 1), 4)
         random_rank = np.random.uniform(0.01, 1.01)
         random_active = round(np.random.uniform(0, 1), 1)
-        problem = QP(n, rank=random_rank, eccentricity=random_eccentricity, active=random_active, c=False)
+        problem = QP(n, Is, rank=random_rank, eccentricity=random_eccentricity, active=random_active, c=False)
         bcqp = BCQP(problem, constraints)
         _, execution_time, iterations, all_gaps, all_convergence_rates, _, _, positions = \
             solve(bcqp, verbose=0)
@@ -88,7 +88,7 @@ def random_test():
         for position in positions:
             if 'edge' in position:
                 edge += 1
-            elif 'Inside' in position:
+            elif 'inside' in position:
                 inside += 1
         num_positions += len(positions)
         for I in Is:
@@ -108,10 +108,6 @@ def random_test():
         gap_list = []
         for i, gaps in enumerate(all_gaps):
             gap_list.append(gaps[-1])
-            for j, gap in enumerate(gaps):
-                if gap != 0:
-                    gaps[j] = np.log1p(gap)
-            gaps[gaps == 0] = np.min(gaps[gaps != 0])
             plot_and_save(gaps, 'Iteration', 'Gap (log scale)',
                           f'tests/dimension_{n}/subproblem_{i}_gap.png')
         mean_gap = round(np.mean(gap_list), 5)
@@ -149,9 +145,9 @@ def random_test():
     dump_json(data, 'tests/statistics.json')
 
 
-def test_scaling(constraints: BoxConstraints, n: int, rank: float, eccentricity: float,
+def test_scaling(Is: list[list[int]], constraints: BoxConstraints, n: int, rank: float, eccentricity: float,
                  active: float, filename: str, json_variable) -> None:
-    problem = QP(n, rank=rank, eccentricity=eccentricity, active=active, c=False, seed=seed)
+    problem = QP(n, Is, rank=rank, eccentricity=eccentricity, active=active, c=False, seed=seed)
     bcqp = BCQP(problem, constraints)
 
     execution_times = []
@@ -195,7 +191,7 @@ def test_dimension_scaling():
         b = create_b(n, len(Is))
 
         constraints = BoxConstraints(A, b, len(Is), n, ineq=True)
-        test_scaling(constraints, n, rank, eccentricity, active, 'tests/dimension_scaling.json', n)
+        test_scaling(Is, constraints, n, rank, eccentricity, active, 'tests/dimension_scaling.json', n)
 
 
 def test_rank_scaling():
@@ -213,7 +209,7 @@ def test_rank_scaling():
     dump_json(data, 'tests/rank_scaling.json')
 
     for rank in tqdm(test_ranks):
-        test_scaling(constraints, n, rank, eccentricity, active, 'tests/rank_scaling.json', rank)
+        test_scaling(Is, constraints, n, rank, eccentricity, active, 'tests/rank_scaling.json', rank)
 
 
 def test_eccentricity_scaling():
@@ -232,7 +228,7 @@ def test_eccentricity_scaling():
     dump_json(data, 'tests/eccentricity_scaling.json')
 
     for eccentricity in tqdm(test_eccentricities):
-        test_scaling(constraints, n, rank, eccentricity, active, 'tests/eccentricity_scaling.json', eccentricity)
+        test_scaling(Is, constraints, n, rank, eccentricity, active, 'tests/eccentricity_scaling.json', eccentricity)
 
 
 def test_active_scaling():
@@ -250,7 +246,7 @@ def test_active_scaling():
     dump_json(data, 'tests/active_scaling.json')
 
     for active in tqdm(test_actives):
-        test_scaling(constraints, n, rank, eccentricity, active, 'tests/active_scaling.json', active)
+        test_scaling(Is, constraints, n, rank, eccentricity, active, 'tests/active_scaling.json', active)
 
 
 def test():
