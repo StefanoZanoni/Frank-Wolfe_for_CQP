@@ -28,7 +28,7 @@ def dump_json(data, filename):
 
 
 def calculate_mean_std(data):
-    return round(np.mean(data), 5), round(np.std(data), 5)
+    return np.mean(data), np.std(data)
 
 
 def plot_and_save(data, xlabel, ylabel, filename):
@@ -130,10 +130,8 @@ def random_test():
     mean_execution_times = round(np.mean(execution_times) * 1000, 5)
     mean_iterations = round(np.mean(iterations_mean_list))
     max_iterations_percentage = round(iteration_limit_number / iterations_number, 3) * 100
-    mean_convergence_rate = round(np.mean(mean_convergence_list), 5)
-    std_convergence_rate = round(np.std(mean_convergence_list), 5)
-    mean_gap = round(np.mean(mean_gaps), 5)
-    std_gap = round(np.std(mean_gaps), 5)
+    mean_convergence_rate, std_convergence_rate = calculate_mean_std(mean_convergence_list)
+    mean_gap, std_gap = calculate_mean_std(mean_gaps)
     edge_percentage = round(edge / num_positions, 3) * 100
     inside_percentage = round(inside / num_positions, 3) * 100
     one_dimension_percentage = round(one_dimension / num_I, 3) * 100
@@ -179,14 +177,14 @@ def test_dimension_scaling():
     test_dimensions = [10, 100, 250, 500]
     rank = 1
     eccentricity = 0.5
-    active = 1.0
+    active = 1
 
     data = {'dimensions': test_dimensions, "rank": rank,
             "eccentricity": eccentricity, "active": active}
     dump_json(data, 'tests/dimension_scaling.json')
 
     for n in tqdm(test_dimensions):
-        Is = create_index_sets(n, uniform=False)
+        Is = create_index_sets(n, uniform=True, cardinality_K=5)
         A = create_A(n, Is)
         b = create_b(n, len(Is))
 
@@ -199,8 +197,8 @@ def test_rank_scaling():
     test_ranks = list(np.arange(0.1, 1.1, 0.1, dtype=float))
     test_ranks = [float(rank) for rank in test_ranks]
     eccentricity = 0.5
-    active = 1.0
-    Is = create_index_sets(n, uniform=False)
+    active = 1
+    Is = create_index_sets(n, uniform=True, cardinality_K=5)
     A = create_A(n, Is)
     b = create_b(n, len(Is))
     constraints = BoxConstraints(A, b, len(Is), n, ineq=True)
@@ -215,11 +213,11 @@ def test_rank_scaling():
 def test_eccentricity_scaling():
     n = 50
     rank = 1
-    test_eccentricities = list(np.arange(0, 1, 0.01))
+    test_eccentricities = list(np.arange(0, 1.1, 0.1))
     test_eccentricities = [float(eccentricity) for eccentricity in test_eccentricities]
-    active = 1.0
+    active = 1
 
-    Is = create_index_sets(n, uniform=False)
+    Is = create_index_sets(n, uniform=True, cardinality_K=5)
     A = create_A(n, Is)
     b = create_b(n, len(Is))
     constraints = BoxConstraints(A, b, len(Is), n, ineq=True)
@@ -237,7 +235,7 @@ def test_active_scaling():
     eccentricity = 0.5
     test_actives = list(np.arange(0, 1.1, 0.1))
     test_actives = [float(active) for active in test_actives]
-    Is = create_index_sets(n, uniform=False)
+    Is = create_index_sets(n, uniform=True, cardinality_K=5)
     A = create_A(n, Is)
     b = create_b(n, len(Is))
     constraints = BoxConstraints(A, b, len(Is), n, ineq=True)
@@ -250,7 +248,7 @@ def test_active_scaling():
 
 
 def test():
-    random_test()
+    # random_test()
     test_dimension_scaling()
     test_rank_scaling()
     test_eccentricity_scaling()

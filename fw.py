@@ -71,7 +71,7 @@ def main():
     problem = QP(n, Is, rank=rank, eccentricity=eccentricity, active=active, c=False)
     bcqp = BCQP(problem, constraints)
 
-    solution, execution_time, iterations, _, _, optimal_minimums, constrained_minimums, positions = (
+    solution, execution_time, iterations, gaps, convergence_rates, optimal_minimums, constrained_minimums, positions = (
         solve(bcqp, max_iter=max_iterations, verbose=verbose, plot=plot,
               axis_range=axis_range, dirname=directory))
 
