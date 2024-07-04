@@ -33,6 +33,7 @@ def calculate_mean_std(data):
 
 def plot_and_save(data, xlabel, ylabel, filename):
     plt.plot(data)
+    plt.semilogy(ylabel='log' in ylabel.lower())
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
     plt.savefig(filename)
