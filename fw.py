@@ -4,6 +4,7 @@ from src.index_set import create_index_sets
 from src.constraints import create_A, create_b
 from src.constraints import BoxConstraints
 from src.qp import QP
+from src.cqp import BCQP
 from src.solver import solve
 
 
@@ -63,14 +64,15 @@ def main():
         verbose = 1
 
     Is = create_index_sets(n, uniform=False)
-    As = [create_A(n, I) for I in Is]
-    b = create_b()
+    A = create_A(n, Is)
+    b = create_b(n, len(Is))
 
-    constraints = [BoxConstraints(A, b, ineq=True) for A in As]
+    constraints = BoxConstraints(A, b, len(Is), n, ineq=True)
     problem = QP(n, rank=rank, eccentricity=eccentricity, active=active, c=False)
+    bcqp = BCQP(problem, constraints)
 
     solution, execution_time, iterations, _, _, optimal_minimums, constrained_minimums, positions = (
-        solve(problem, constraints, As, n, max_iter=max_iterations, verbose=verbose, plot=plot,
+        solve(bcqp, max_iter=max_iterations, verbose=verbose, plot=plot,
               axis_range=axis_range, dirname=directory))
 
     print(f"Execution Time: {round(execution_time * 1000, 4)} ms")

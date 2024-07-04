@@ -137,7 +137,8 @@ class QP:
         if seed:
             np.random.seed(seed)
 
-        self._dim = dim
+        self.dim = dim
+        self._sub_dim = dim
         self._Q = generate_Q(dim, rank, eccentricity)
         self._subQ = self._Q
         self._q = generate_q(dim, self._Q, active)
@@ -193,20 +194,20 @@ class QP:
 
         return self.evaluate(self.minimum_point())
 
-    def set_subproblem(self, indexes: list) -> None:
+    def set_subproblem(self, dimensions: np.ndarray[bool]) -> None:
         """
         Sets the subproblem by selecting specific indexes.
 
         Args:
-            indexes (ndarray): The indexes to select for the subproblem.
+            dimensions (ndarray): The indexes to select for the subproblem.
         """
 
-        self._subQ = self._Q[indexes][:, indexes]
-        self._subq = self._q[indexes]
-        self._dim = len(self._subq)
+        self._subQ = self._Q[dimensions][:, dimensions]
+        self._subq = self._q[dimensions]
+        self._sub_dim = len(self._subq)
 
     def get_dim(self) -> int:
-        return self._dim
+        return self._sub_dim
 
     def get_Q(self) -> np.ndarray:
         return self._subQ

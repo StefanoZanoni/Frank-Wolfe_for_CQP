@@ -16,16 +16,17 @@ class CQP:
         self.problem = qp
         self.constraints = c
 
-    def set_subproblem(self, indexes: np.ndarray) -> None:
+    def set_subproblem(self, k: int, dimensions: np.ndarray[bool]) -> None:
         """
-        Sets the subproblem by selecting specific indexes.
+        Sets the subproblem by selecting specific dimensions and the k-th index_set.
 
         Parameters:
-        - indexes (np.ndarray): The indexes to select.
+        - k (int): The k-th index set.
+        - dimensions (np.ndarray): The dimensions to select.
 
         """
-        self.problem.set_subproblem(indexes)
-        self.constraints.set_subproblem(indexes)
+        self.problem.set_subproblem(dimensions)
+        self.constraints.set_subproblem(k, dimensions)
 
 
 class BCQP(CQP):

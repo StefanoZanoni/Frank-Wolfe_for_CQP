@@ -21,15 +21,19 @@ class Constraints:
 
     """
 
-    def __init__(self, A: np.ndarray, b: np.ndarray, ineq: bool = True) -> None:
+    def __init__(self, A: np.ndarray, b: np.ndarray, K: int, n: int, ineq: bool = True) -> None:
         self.A = A.copy()
         self._subA = A
         self.b = b.copy()
+        self._subb = b
         self.ineq = ineq
         self.num_constraints = len(b)
         self._tol = 1e-8
+        self.K = K
+        self.dim = n
+        self._sub_dim = n
 
-    def evaluate(self, x: np.ndarray) -> np.ndarray or bool:
+    def evaluate(self, x: np.ndarray) -> bool:
         """
         Evaluates the constraints at a given point x.
 
@@ -37,15 +41,14 @@ class Constraints:
         - x (np.ndarray): The point at which to evaluate the constraints.
 
         Returns:
-        - result (np.ndarray or bool): The result of evaluating the constraints. If the constraints are inequalities,
-          the result is a boolean array indicating whether each constraint is satisfied. If the constraints are equalities,
-          the result is a boolean indicating whether all constraints are satisfied.
+        - result (bool): The result of evaluating the constraints.
 
         """
+
         if self.ineq:
-            return (np.dot(self._subA, x) <= self.b + self._tol).all()
+            return (np.dot(self._subA, x) <= self._subb + self._tol).all()
         else:
-            return (np.dot(self._subA, x) == self.b + self._tol).all()
+            return (np.dot(self._subA, x) == self._subb + self._tol).all()
 
     def active_constraints(self, x: np.ndarray) -> np.ndarray:
         """
@@ -59,9 +62,9 @@ class Constraints:
 
         """
         if self.ineq:
-            return np.dot(self._subA, x) <= self.b + self._tol
+            return np.dot(self._subA, x) <= self._subb + self._tol
         else:
-            return np.dot(self._subA, x) == self.b + self._tol
+            return np.dot(self._subA, x) == self._subb + self._tol
 
     def check_KKT(self, x: np.ndarray, derivative: callable(np.ndarray)) -> str:
         """
@@ -112,15 +115,27 @@ class Constraints:
         else:
             return "Outside"
 
-    def set_subproblem(self, indexes: np.ndarray) -> None:
+    def set_subproblem(self, k: int, dimensions: np.ndarray[bool]) -> None:
         """
-            Sets the subproblem by selecting specific indexes.
+            Sets the subproblem by selecting specific dimensions and the k-th index set.
 
             Parameters:
-            - indexes (np.ndarray): The indexes to select.
+            - dimensions (np.ndarray): The dimensions to select.
+            - k (int): The k-th index set.
 
             """
-        self._subA = self.A[:, indexes]
+        self._sub_dim = sum(dimensions)
+
+        b_zero = self.b[-self._sub_dim:]
+        self._subb = np.concatenate(([1], [-1], b_zero))
+
+        A_one = self.A[k, dimensions]
+        A_minus_one = self.A[k + self.K, dimensions]
+        A_zero = self.A[-self._sub_dim:, dimensions]
+        self._subA = np.vstack((A_one, A_minus_one, A_zero))
+
+    def get_dim(self):
+        return self._sub_dim
 
 
 class BoxConstraints(Constraints):
@@ -137,38 +152,48 @@ class BoxConstraints(Constraints):
         ineq (bool, optional): Indicates whether the constraints are inequalities. Defaults to True.
     """
 
-    def __init__(self, A: np.ndarray, b: np.ndarray, ineq: bool = True) -> None:
-        self.box_min = np.min(b)
-        self.box_max = np.max(b)
-
-        super().__init__(A, b, ineq)
+    def __init__(self, A: np.ndarray, b: np.ndarray, K: int, n: int, ineq: bool = True) -> None:
+        super().__init__(A, b, K, n, ineq)
 
 
-def create_A(n: int, index_set: list) -> np.ndarray:
+def create_A(n: int, Is: list[list]) -> np.ndarray:
     """
-    Create a matrix A with specified dimensions and index set.
+    Create a matrix A with the specified dimension and index sets.
 
     Parameters:
     - n (int): The number of columns in the matrix A.
-    - index_set (list): The list of indices to set to 1 in the first row of A.
+    - Is (list): The list of index sets
 
     Returns:
     - A (numpy.ndarray): The created matrix A.
 
     """
-    A = [[0 for _ in range(n)], [0 for _ in range(n)], [-1 for _ in range(n)]]
-    for i in index_set:
-        A[0][i] = 1
-        A[1][i] = -1
+    A1 = []
+    for I in Is:
+        row_k = np.zeros(n)
+        for index in I:
+            row_k[index] = 1
+        A1.append(row_k)
+    A1 = np.vstack(A1)
+    I = np.eye(n)
 
-    return np.array(A)
+    A = np.vstack([A1, -A1, -I])
+    A[A == -0.0] = 0.0
+    return A
 
 
-def create_b() -> np.ndarray:
+def create_b(n, K) -> np.ndarray:
     """
     Creates and returns a numpy array representing the vector b.
+
+    Args:
+    n (int): The number of dimensions.
+    K (int): The number of index sets.
 
     Returns:
     np.array: The vector b.
     """
-    return np.array([1, -1, 0])
+    ones = np.ones(K)
+    zeros = np.zeros(n)
+
+    return np.concatenate((ones, -ones, zeros))

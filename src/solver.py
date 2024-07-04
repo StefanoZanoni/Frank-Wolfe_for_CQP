@@ -4,7 +4,6 @@ import time
 
 from src.frank_wolfe import frank_wolfe
 from src.cqp import BCQP
-from src.qp import QP
 from src.constraints import BoxConstraints
 
 
@@ -124,17 +123,13 @@ def plot_bcqp(bcqp: BCQP, bounded_minimum_point: np.ndarray, bounded_minimum: fl
     fig.write_html(filename + '.html')
 
 
-def solve(problem: QP, constraints: list[BoxConstraints], As: list[np.ndarray], n: int, max_iter: int = 1000,
-          verbose: int = 1, plot: bool = False, dirname: str = './', axis_range: tuple[float] = (-10, 10)) \
+def solve(bcqp: BCQP, max_iter: int = 1000, verbose: int = 1, plot: bool = False, dirname: str = './',
+          axis_range: tuple[float] = (-10, 10))\
         -> tuple[np.ndarray, float, list, list[list], list[list], list[float], list[float], list[str]]:
     """
     Solve the optimization problem for each index set.
 
-    :param problem: The optimization problem.
-    :param constraints: The constraints of the problem.
-    :param As: The matrices of constraints.
-    :param n: The dimension of the problem.
-    Default is 10.
+    :param bcqp: The box constrained quadratic problem to solve.
     :param max_iter: The maximum number of iterations.
     Default is 1000.
     :param verbose: The verbosity level.
@@ -151,7 +146,7 @@ def solve(problem: QP, constraints: list[BoxConstraints], As: list[np.ndarray], 
      and the positions, inside or on the edge of the feasible region.
     """
 
-    x_optimal = np.empty(n)
+    x_optimal = np.empty(bcqp.problem.dim)
     iterations = []
     all_gaps = []
     all_convergence_rates = []
@@ -159,19 +154,17 @@ def solve(problem: QP, constraints: list[BoxConstraints], As: list[np.ndarray], 
     approximated_minimums = []
     positions = []
     start = time.time()
-    for k, c in enumerate(constraints):
+    for k in range(bcqp.constraints.K):
         if verbose == 1:
             print(f'Sub problem {k}')
 
         # compute the indexes of k-th index set I
-        indexes = As[k][0] != 0
+        indexes = bcqp.constraints.A[k, :] != 0
         # initialize the starting point
         x_init = np.zeros(sum(indexes))
         x_init[0] = 1
-        # construct the BCQP problem from the actual constraints
-        bcqp = BCQP(problem, c)
         # consider only the subproblem relative to the indexes
-        bcqp.set_subproblem(indexes)
+        bcqp.set_subproblem(k, indexes)
         # solve the subproblem
         x_i, v_i, iteration, gaps, convergence_rates = frank_wolfe(bcqp, x_init, eps=1e-6, max_iter=max_iter,
                                                                    verbose=verbose)
