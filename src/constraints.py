@@ -79,9 +79,6 @@ class Constraints:
          outside of the feasible region.
 
         """
-        if np.sum(x) != 1 or np.any(x) < 0:
-            return 'outside'
-
         if np.any(x == 0):
             return 'edge'
         else:

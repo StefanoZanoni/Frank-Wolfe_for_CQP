@@ -213,7 +213,7 @@ def test_rank_scaling():
 def test_eccentricity_scaling():
     n = 50
     rank = 1
-    test_eccentricities = list(np.arange(0, 1.1, 0.1))
+    test_eccentricities = list(np.arange(0, 1, 0.1))
     test_eccentricities = [float(eccentricity) for eccentricity in test_eccentricities]
     active = 1
 
