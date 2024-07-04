@@ -3,7 +3,6 @@ import os
 import json
 import matplotlib.pyplot as plt
 from tqdm import tqdm
-import itertools
 
 from src.index_set import create_index_sets
 from src.constraints import create_A, create_b

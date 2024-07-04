@@ -68,7 +68,7 @@ def main():
     b = create_b(n, len(Is))
 
     constraints = BoxConstraints(A, b, len(Is), n, ineq=True)
-    problem = QP(n, rank=rank, eccentricity=eccentricity, active=active, c=False)
+    problem = QP(n, Is, rank=rank, eccentricity=eccentricity, active=active, c=False)
     bcqp = BCQP(problem, constraints)
 
     solution, execution_time, iterations, _, _, optimal_minimums, constrained_minimums, positions = (

@@ -146,7 +146,8 @@ def solve(bcqp: BCQP, max_iter: int = 1000, verbose: int = 1, plot: bool = False
      and the positions, inside or on the edge of the feasible region.
     """
 
-    x_optimal = np.empty(bcqp.problem.dim)
+    dim = bcqp.problem.dim
+    x_optimal = np.empty(dim)
     iterations = []
     all_gaps = []
     all_convergence_rates = []
@@ -178,7 +179,7 @@ def solve(bcqp: BCQP, max_iter: int = 1000, verbose: int = 1, plot: bool = False
         approximated_minimums.append(v_i)
 
         # check the position of the solution found
-        position = bcqp.constraints.check_KKT(x_i, bcqp.problem.derivative)
+        position = bcqp.constraints.check_position(x_i)
         positions.append(position)
 
         if verbose == 1:

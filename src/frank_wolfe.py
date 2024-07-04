@@ -81,7 +81,7 @@ def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 100
             x += alpha * d
             v_temp = cqp.problem.evaluate(x)
             delta_k_plus_1 = v_temp - minimum
-            convergence_rate = delta_k_plus_1 / delta_k
+            convergence_rate = delta_k_plus_1 / (delta_k + 1e-10)
             convergence_rates[i] = convergence_rate
 
             if verbose == 1:

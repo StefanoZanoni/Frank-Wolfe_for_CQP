@@ -1,4 +1,5 @@
 import numpy as np
+import copy
 
 
 class Constraints:
@@ -66,54 +67,25 @@ class Constraints:
         else:
             return np.dot(self._subA, x) == self._subb + self._tol
 
-    def check_KKT(self, x: np.ndarray, derivative: callable(np.ndarray)) -> str:
+    def check_position(self, x: np.ndarray) -> str:
         """
-        Checks the KKT conditions at a given point x.
+        Checks the position of x in the feasible region.
 
         Parameters:
-        - x (np.ndarray): The point at which to check the KKT conditions.
-        - derivative (callable): The derivative of the objective function.
+        - x (np.ndarray): The point at which to check the position.
 
         Returns:
-        - message (str): A message indicating whether the solution is inside or on the edge of the feasible region.
+        - message (str): A message indicating whether the solution is inside, on the edge or
+         outside of the feasible region.
 
         """
+        if np.sum(x) != 1 or np.any(x) < 0:
+            return 'outside'
 
-        # The lagrangian function is L(x, v, lambda) = x^TQx + q^Tx - lambda * x + v (a^T x - b)
-        # where a is the vector of ones and b is 1.
-        # Its gradient is grad_L(x, v, lambda) = Qx + q - lambda + v * a
-
-        grad = derivative(x)
-
-        a = np.ones_like(x)
-        n = len(x)
-
-        # compute v, the lagrangian multiplier for the equality constraint (summation of x_i = 1)
-        v = -np.dot(a.T, grad) / n
-
-        # compute lambda, the lagrangian multiplier for the inequality constraint (x_i >= 0)
-        lambda_ = grad + v * a
-
-        grad_L = grad + lambda_ + v * a
-
-        # Check the KKT conditions
-        primal_feasibility = self.evaluate(x)
-        dual_feasibility = np.all(lambda_ >= -self._tol)
-        complementary_slackness = np.all(np.isclose(lambda_ * x, 0, atol=self._tol))
-        stationarity = np.all(np.isclose(grad_L, 0, atol=self._tol))
-
-        if primal_feasibility and dual_feasibility and complementary_slackness and stationarity:
-            if np.any(x == 0):
-                return "On the edge (optimal)"
-            else:
-                return "Inside (optimal)"
-        elif primal_feasibility:
-            if np.any(x == 0):
-                return "On the edge (non-optimal)"
-            else:
-                return "Inside (non-optimal)"
+        if np.any(x == 0):
+            return 'edge'
         else:
-            return "Outside"
+            return 'inside'
 
     def set_subproblem(self, k: int, dimensions: np.ndarray[bool]) -> None:
         """

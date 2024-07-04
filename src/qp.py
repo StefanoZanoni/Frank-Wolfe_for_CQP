@@ -38,7 +38,7 @@ def generate_Q(dim: int, rank: float, eccentricity: float) -> np.ndarray:
     return Q
 
 
-def generate_q(dim: int, Q: np.ndarray, active: float) -> np.ndarray:
+def generate_q(dim: int, Q: np.ndarray, index_sets: list[list[int]], active: float) -> np.ndarray:
     """
     Generates the minimum unconstrained vector 'z'
     based on the given parameters and returns the dot product of '-Q' and 'z'.
@@ -56,6 +56,16 @@ def generate_q(dim: int, Q: np.ndarray, active: float) -> np.ndarray:
 
     z = np.zeros(dim)
 
+    # make z satisfy the equality constraint
+    for I in index_sets:
+        subset_size = len(I)
+        # Generate random values for the elements within the subset
+        random_values = np.random.rand(subset_size)
+        # Normalize the values so that their sum is 1
+        random_values /= np.sum(random_values)
+        for idx, value in zip(I, random_values):
+            z[idx] = value
+
     # probability of being outside the box
     outb = np.random.rand(dim) >= active
 
@@ -68,10 +78,6 @@ def generate_q(dim: int, Q: np.ndarray, active: float) -> np.ndarray:
     z[l] -= np.random.rand(np.sum(l))
     # a small random amount to the right of the upper bound
     z[r] += 1 + np.random.rand(np.sum(r))
-
-    # entries that will be inside the bound
-    outb = np.logical_not(outb)
-    z[outb] = np.random.rand(np.sum(outb))
 
     return np.dot(-z.T, Q)
 
@@ -118,7 +124,7 @@ class QP:
         get_q(): Returns the sub vector of q.
     """
 
-    def __init__(self, dim: int, rank: float = 1, eccentricity: float = 0.9, active: float = 1,
+    def __init__(self, dim: int, index_sets: list[list[int]], rank: float = 1, eccentricity: float = 0.9, active: float = 1,
                  c: bool = False, seed: int = None) -> None:
         if dim < 1:
             raise ValueError("dim must be greater than 0")
@@ -141,7 +147,7 @@ class QP:
         self._sub_dim = dim
         self._Q = generate_Q(dim, rank, eccentricity)
         self._subQ = self._Q
-        self._q = generate_q(dim, self._Q, active)
+        self._q = generate_q(dim, self._Q, index_sets, active)
         self._subq = self._q
         if c:
             self._c = np.random.uniform(0, 1)

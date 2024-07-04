@@ -22,7 +22,6 @@ class CQP:
 
         Parameters:
         - k (int): The k-th index set.
-        - dimensions (np.ndarray): The dimensions to select.
 
         """
         self.problem.set_subproblem(dimensions)
