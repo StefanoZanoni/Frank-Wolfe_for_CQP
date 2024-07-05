@@ -76,9 +76,12 @@ class Constraints:
 
         Returns:
         - message (str): A message indicating whether the solution is inside, on the edge or
-         outside of the feasible region.
+         outside the feasible region.
 
         """
+        if not self.evaluate(x):
+            return 'outside'
+
         if np.any(x == 0):
             return 'edge'
         else:
