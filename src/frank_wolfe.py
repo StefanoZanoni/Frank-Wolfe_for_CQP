@@ -95,6 +95,6 @@ def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 100
         i += 1
 
     if i == 0:
-        return x, v, i + 1, [gaps[0]], [convergence_rates[0]]
+        return x, v, i, [gaps[0]], [convergence_rates[0]]
     else:
         return x, v, i, gaps[:i + 1], convergence_rates[:i]
