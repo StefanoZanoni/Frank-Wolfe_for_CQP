@@ -81,6 +81,10 @@ def main():
     print(f'Optimal minimums: {optimal_minimums}')
     print(f'Constrained minimums: {constrained_minimums}')
     print(f'Positions in the feasible region: {positions}')
+    convergence_rate = []
+    for rate in convergence_rates:
+        convergence_rate.append(rate[-1])
+    print(f'Convergence rates: {convergence_rate}')
 
 
 if __name__ == '__main__':

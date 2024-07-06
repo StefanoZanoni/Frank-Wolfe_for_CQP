@@ -41,8 +41,27 @@ def plot_and_save(data, xlabel, ylabel, filename):
 
 
 ensure_dir_exists('tests')
+ensure_dir_exists('tests/random_tests')
+ensure_dir_exists('tests/dimension_scaling')
+ensure_dir_exists('tests/rank_scaling')
+ensure_dir_exists('tests/eccentricity_scaling')
+ensure_dir_exists('tests/active_scaling')
 
 seed = 5
+
+
+def calculate_position_percentages(positions_list):
+    edge_count = positions_list.count('edge')
+    inside_count = positions_list.count('inside')
+    total_count = len(positions_list)
+
+    if total_count == 0:
+        return 0, 0
+
+    edge_percentage = (edge_count / total_count) * 100
+    inside_percentage = (inside_count / total_count) * 100
+
+    return edge_percentage, inside_percentage
 
 
 def append_to_json_file(data, filename):
@@ -58,19 +77,15 @@ def append_to_json_file(data, filename):
 def random_test():
     test_dimensions = np.arange(50, 151, 1)
     for n in test_dimensions:
-        ensure_dir_exists(f'tests/dimension_{n}')
+        ensure_dir_exists(f'tests/random_tests/dimension_{n}')
 
-    iterations_number = 0
-    iteration_limit_number = 0
-    iterations_mean_list = []
     execution_times = []
-    mean_convergence_list = []
-    mean_gaps = []
-    edge = 0
-    inside = 0
-    num_positions = 0
-    one_dimension = 0
-    num_I = 0
+    iterations_list = []
+    gap_list = []
+    convergence_list = []
+    positions_list = []
+    one_dimension_count = 0
+    total_index_sets = 0
     for n in tqdm(test_dimensions):
         Is = create_index_sets(n, uniform=False)
         A = create_A(n, Is)
@@ -84,94 +99,126 @@ def random_test():
         problem = QP(n, Is, rank=random_rank, eccentricity=random_eccentricity, active=random_active, c=False)
         bcqp = BCQP(problem, constraints)
         _, execution_time, iterations, all_gaps, all_convergence_rates, _, _, positions = \
-            solve(bcqp, verbose=0)
+            solve(bcqp, verbose=0, max_iter=2000)
 
-        for position in positions:
-            if 'edge' in position:
-                edge += 1
-            elif 'inside' in position:
-                inside += 1
-        num_positions += len(positions)
-        for I in Is:
-            if len(I) == 1:
-                one_dimension += 1
-        num_I += len(Is)
         execution_times.append(execution_time)
-        iterations_number += len(iterations)
-        mean_iterations = round(np.mean(iterations))
-        iterations_mean_list.append(mean_iterations)
-        iteration_limit_number += iterations.count(1000)
+        iterations_list.extend(iterations)
+        gap_list.extend([gaps[-1] for gaps in all_gaps])
+        convergence_list.extend([convergence_rates[-1] for convergence_rates in all_convergence_rates])
+        positions_list.extend(positions)
+        one_dimension_count += sum(len(I) == 1 for I in Is)
+        total_index_sets += len(Is)
 
-        data = {'rank': random_rank, 'eccentricity': random_eccentricity, 'active': random_active,
-                'execution_time': execution_time, 'iterations': iterations, 'positions': positions}
-        dump_json(data, f'tests/dimension_{n}/random_results.json')
+        data = {'rank': random_rank,
+                'eccentricity': random_eccentricity,
+                'active': random_active,
+                'execution_time': execution_time,
+                'iterations': iterations,
+                'positions': positions,
+                'gaps': [gaps[-1] for gaps in all_gaps],
+                'convergence_rates': [convergence_rates[-1] for convergence_rates in all_convergence_rates]}
+        dump_json(data, f'tests/random_tests/dimension_{n}/random_results.json')
 
-        gap_list = []
         for i, gaps in enumerate(all_gaps):
             gap_list.append(gaps[-1])
             plot_and_save(gaps, 'Iteration', 'Gap (log scale)',
-                          f'tests/dimension_{n}/subproblem_{i}_gap.png')
-        mean_gap = round(np.mean(gap_list), 5)
-        mean_gaps.append(mean_gap)
-        new_data = {'mean_gap': mean_gap}
-        append_to_json_file(new_data, f'tests/dimension_{n}/random_results.json')
+                          f'tests/random_tests/dimension_{n}/subproblem_{i}_gap.png')
 
-        convergences = []
         for i, convergence_rates in enumerate(all_convergence_rates):
             plot_and_save(convergence_rates, 'Iteration', 'Convergence rate',
-                          f'tests/dimension_{n}/subproblem_{i}_convergence_rate.png')
-            if len(convergence_rates) > 0:
-                convergences.append(convergence_rates[-1])
-        if len(convergences) > 0:
-            mean_convergence_rate = round(np.mean(convergences), 5)
-            mean_convergence_list.append(mean_convergence_rate)
-            new_data = {'mean_convergence_rate': mean_convergence_rate}
-            append_to_json_file(new_data, f'tests/dimension_{n}/random_results.json')
+                          f'tests/random_tests/dimension_{n}/subproblem_{i}_convergence_rate.png')
 
-    mean_execution_times = round(np.mean(execution_times) * 1000, 5)
-    mean_iterations = round(np.mean(iterations_mean_list))
-    max_iterations_percentage = round(iteration_limit_number / iterations_number, 3) * 100
-    mean_convergence_rate, std_convergence_rate = calculate_mean_std(mean_convergence_list)
-    mean_gap, std_gap = calculate_mean_std(mean_gaps)
-    edge_percentage = round(edge / num_positions, 3) * 100
-    inside_percentage = round(inside / num_positions, 3) * 100
-    one_dimension_percentage = round(one_dimension / num_I, 3) * 100
-    data = {'max_iteration_percentage': max_iterations_percentage, 'mean_iterations': mean_iterations,
-            'mean_execution_time (ms)': mean_execution_times,
-            'mean_convergence_rate': mean_convergence_rate, 'std_convergence_rate': std_convergence_rate,
-            'mean_gap': mean_gap, 'std_gap': std_gap, 'edge_percentage': edge_percentage,
-            'inside_percentage': inside_percentage, 'one_dimension_percentage': one_dimension_percentage}
-    dump_json(data, 'tests/statistics.json')
-
-
-def test_scaling(Is: list[list[int]], constraints: BoxConstraints, n: int, rank: float, eccentricity: float,
-                 active: float, filename: str, json_variable) -> None:
-    problem = QP(n, Is, rank=rank, eccentricity=eccentricity, active=active, c=False, seed=seed)
-    bcqp = BCQP(problem, constraints)
-
-    execution_times = []
-    gap_list = []
-    convergence_list = []
-    for _ in range(100):
-        _, execution_time, _, all_gaps, all_convergence_rates, optimal_minimums, constrained_minimums, positions \
-            = solve(bcqp, verbose=0)
-        execution_times.append(execution_time)
-        gap_list.append(np.mean([gaps[-1] for gaps in all_gaps]))
-        convergence_list.append(np.mean([convergence_rates[-1] for convergence_rates in all_convergence_rates]))
     mean_time, std_time = calculate_mean_std(execution_times)
     mean_gap, std_gap = calculate_mean_std(gap_list)
     mean_convergence, std_convergence = calculate_mean_std(convergence_list)
+    mean_iterations = np.mean(iterations_list)
+    edge_percentage, inside_percentage = calculate_position_percentages(positions_list)
+    one_dimension_percentage = (one_dimension_count / total_index_sets * 100) if total_index_sets else 0
+    mean_time *= 1000
+    std_time *= 1000
+    data = {
+        'mean_execution_time (ms)': mean_time,
+        'standard_deviation_time (ms)': std_time,
+        'mean_gap': mean_gap,
+        'standard_deviation_gap': std_gap,
+        'mean_convergence_rate': mean_convergence,
+        'standard_deviation_convergence_rate': std_convergence,
+        'mean_iterations': round(mean_iterations),
+        'edge_percentage': edge_percentage,
+        'inside_percentage': inside_percentage,
+        'one_dimension_percentage': one_dimension_percentage
+    }
+    dump_json(data, 'tests/random_tests/random_tests_statistics.json')
+
+
+def test_scaling(Is: list[list[int]], constraints: BoxConstraints, n: int, rank: float, eccentricity: float,
+                 active: float, test_variable: str) -> None:
+
+    if test_variable == 'rank':
+        param_variable = f'rank_{rank}'
+    elif test_variable == 'eccentricity':
+        param_variable = f'eccentricity_{eccentricity}'
+    elif test_variable == 'active':
+        param_variable = f'active_{active}'
+    elif test_variable == 'dimension':
+        param_variable = f'dimension_{n}'
+
+    problem_dir = f'tests/{test_variable}_scaling/{param_variable}'
+    ensure_dir_exists(problem_dir)
+
+    execution_times = []
+    iterations_list = []
+    gap_list = []
+    convergence_list = []
+    positions_list = []
+    one_dimension_count = 0
+    total_index_sets = 0
+    for _ in range(100):
+        problem = QP(n, Is, rank=rank, eccentricity=eccentricity, active=active, c=False, seed=seed)
+        bcqp = BCQP(problem, constraints)
+
+        (_, execution_time, iterations, all_gaps, all_convergence_rates, optimal_minimums, constrained_minimums,
+         positions) = solve(bcqp, verbose=0, max_iter=2000)
+
+        # collect general statistics
+        execution_times.append(execution_time)
+        iterations_list.extend(iterations)
+        gap_list.extend([gaps[-1] for gaps in all_gaps])
+        convergence_list.extend([convergence_rates[-1] for convergence_rates in all_convergence_rates])
+        positions_list.extend(positions)
+        one_dimension_count += sum(len(I) == 1 for I in Is)
+        total_index_sets += len(Is)
+
+    # Plotting for each subproblem
+    for i, gaps in enumerate(all_gaps):
+        plot_and_save(gaps, 'Iteration', 'Gap (log scale)',
+                      f'{problem_dir}/subproblem_{i}_gap.png')
+    for i, convergence_rates in enumerate(all_convergence_rates):
+        plot_and_save(convergence_rates, 'Iteration', 'Convergence rate',
+                      f'{problem_dir}/subproblem_{i}_convergence_rate.png')
+
+    mean_time, std_time = calculate_mean_std(execution_times)
+    mean_gap, std_gap = calculate_mean_std(gap_list)
+    mean_convergence, std_convergence = calculate_mean_std(convergence_list)
+    mean_iterations = np.mean(iterations_list)
+    edge_percentage, inside_percentage = calculate_position_percentages(positions_list)
+    one_dimension_percentage = (one_dimension_count / total_index_sets * 100) if Is else 0
     mean_time *= 1000
     std_time *= 1000
 
-    new_data = {f'mean_execution_time_{json_variable} (ms)': mean_time,
-                f'standard_deviation_{json_variable} (ms)': std_time,
-                f'mean_gap_{json_variable}': mean_gap,
-                f'standard_deviation_gap_{json_variable}': std_gap,
-                f'mean_convergence_{json_variable}': mean_convergence,
-                f'standard_deviation_convergence_{json_variable}': std_convergence,
-                f'positions_{json_variable}': positions}
-    append_to_json_file(new_data, filename)
+    new_data = {
+        f'mean_execution_time_{param_variable} (ms)': mean_time,
+        f'standard_deviation_{param_variable} (ms)': std_time,
+        f'mean_gap_{param_variable}': mean_gap,
+        f'standard_deviation_gap_{param_variable}': std_gap,
+        f'mean_convergence_{param_variable}': mean_convergence,
+        f'standard_deviation_convergence_{param_variable}': std_convergence,
+        f'mean_iterations_{param_variable}': round(mean_iterations),
+        f'edge_percentage_{param_variable}': edge_percentage,
+        f'inside_percentage_{param_variable}': inside_percentage,
+        f'one_dimension_percentage_{param_variable}': one_dimension_percentage
+    }
+    dump_json(new_data, f'{problem_dir}/{param_variable}_statistics.json')
 
 
 def test_dimension_scaling():
@@ -180,17 +227,13 @@ def test_dimension_scaling():
     eccentricity = 0.5
     active = 1
 
-    data = {'dimensions': test_dimensions, "rank": rank,
-            "eccentricity": eccentricity, "active": active}
-    dump_json(data, 'tests/dimension_scaling.json')
-
     for n in tqdm(test_dimensions):
-        Is = create_index_sets(n, uniform=True, cardinality_K=5)
+        Is = create_index_sets(n, uniform=False)
         A = create_A(n, Is)
         b = create_b(n, len(Is))
 
         constraints = BoxConstraints(A, b, len(Is), n, ineq=True)
-        test_scaling(Is, constraints, n, rank, eccentricity, active, 'tests/dimension_scaling.json', n)
+        test_scaling(Is, constraints, n, rank, eccentricity, active, 'dimension')
 
 
 def test_rank_scaling():
@@ -199,16 +242,14 @@ def test_rank_scaling():
     test_ranks = [float(rank) for rank in test_ranks]
     eccentricity = 0.5
     active = 1
+
     Is = create_index_sets(n, uniform=True, cardinality_K=5)
     A = create_A(n, Is)
     b = create_b(n, len(Is))
     constraints = BoxConstraints(A, b, len(Is), n, ineq=True)
 
-    data = {"dimensions": n, "eccentricity": eccentricity, "active": active, 'ranks': test_ranks}
-    dump_json(data, 'tests/rank_scaling.json')
-
     for rank in tqdm(test_ranks):
-        test_scaling(Is, constraints, n, rank, eccentricity, active, 'tests/rank_scaling.json', rank)
+        test_scaling(Is, constraints, n, rank, eccentricity, active, 'rank')
 
 
 def test_eccentricity_scaling():
@@ -223,11 +264,8 @@ def test_eccentricity_scaling():
     b = create_b(n, len(Is))
     constraints = BoxConstraints(A, b, len(Is), n, ineq=True)
 
-    data = {"dimensions": n, "rank": rank, "active": active, 'eccentricities': test_eccentricities}
-    dump_json(data, 'tests/eccentricity_scaling.json')
-
     for eccentricity in tqdm(test_eccentricities):
-        test_scaling(Is, constraints, n, rank, eccentricity, active, 'tests/eccentricity_scaling.json', eccentricity)
+        test_scaling(Is, constraints, n, rank, eccentricity, active, 'eccentricity')
 
 
 def test_active_scaling():
@@ -236,20 +274,18 @@ def test_active_scaling():
     eccentricity = 0.5
     test_actives = list(np.arange(0, 1.1, 0.1))
     test_actives = [float(active) for active in test_actives]
+
     Is = create_index_sets(n, uniform=True, cardinality_K=5)
     A = create_A(n, Is)
     b = create_b(n, len(Is))
     constraints = BoxConstraints(A, b, len(Is), n, ineq=True)
 
-    data = {"dimensions": n, "rank": rank, "eccentricity": eccentricity, 'actives': test_actives}
-    dump_json(data, 'tests/active_scaling.json')
-
     for active in tqdm(test_actives):
-        test_scaling(Is, constraints, n, rank, eccentricity, active, 'tests/active_scaling.json', active)
+        test_scaling(Is, constraints, n, rank, eccentricity, active, 'active')
 
 
 def test():
-    # random_test()
+    random_test()
     test_dimension_scaling()
     test_rank_scaling()
     test_eccentricity_scaling()
