@@ -10,21 +10,6 @@ def solve_LMO(grad: np.ndarray) -> np.ndarray:
     return z
 
 
-def compute_convergence_rate(cqp: CQP, minimum: float, convergence_rates: list[float], i: int, ls: ExactLineSearch,
-                             d: np.ndarray, x: np.ndarray, v: float) -> float:
-    delta_k = v - minimum
-
-    alpha = ls.compute(x, d)
-    x += alpha * d
-
-    v = cqp.problem.evaluate(x)
-    delta_k_plus_1 = v - minimum
-    convergence_rate = delta_k_plus_1 / delta_k
-    convergence_rates[i] = convergence_rate
-
-    return v
-
-
 def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 1000, verbose: int = 1) \
         -> tuple[np.ndarray, float, int, list[float], list[float]]:
     """
@@ -51,8 +36,8 @@ def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 100
     convergence_rates = [1] * max_iter
 
     i = 0
-    v = cqp.problem.evaluate(x)
     while i < max_iter:
+        v = cqp.problem.evaluate(x)
         grad = cqp.problem.derivative(x)
 
         # solve the linear minimization oracle
@@ -69,6 +54,8 @@ def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 100
         gap = (v - best_lb) / max(np.abs(v), 1)
         gaps[i] = gap
         if gap < eps:
+            delta_k = v - best_lb
+            convergence_rates[i] = delta_k / delta_k_minus_1 if i >= 1 else 0
             if verbose == 1:
                 if gap == 0:
                     print(f'Iteration {i}: status = optimal, v = {v}, gap = {gap}')
@@ -76,25 +63,23 @@ def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 100
                     print(f'Iteration {i}: status = approximated, v = {v}, gap = {gap}')
             break
 
-        delta_k = v - best_lb
-
         # line search for alpha
         alpha = ls.compute(x, d)
         x += alpha * d
 
-        v = cqp.problem.evaluate(x)
-        delta_k_plus_1 = v - best_lb
-        convergence_rate = delta_k_plus_1 / delta_k
-        convergence_rates[i] = convergence_rate
+        # compute the convergence rate
+        delta_k = v - best_lb
+        convergence_rates[i] = delta_k / delta_k_minus_1 if i >= 1 else 0
+        delta_k_minus_1 = delta_k
 
+        i += 1
         if verbose == 1:
-            if i + 1 >= max_iter + 1:
+            if i >= max_iter:
                 print(f'Iteration {i}: status = stopped, v = {v}, gap = {gap}')
             else:
                 print(f'Iteration {i}: status = non optimal, v = {v}, gap = {gap}')
-        i += 1
 
     if i == 0:
         return x, v, i, [gaps[0]], [convergence_rates[0]]
     else:
-        return x, v, i, gaps[:i + 1], convergence_rates[:i]
+        return x, v, i, gaps[:i + 1], convergence_rates[:i + 1]

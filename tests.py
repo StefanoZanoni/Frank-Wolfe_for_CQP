@@ -48,6 +48,7 @@ ensure_dir_exists('tests/eccentricity_scaling')
 ensure_dir_exists('tests/active_scaling')
 
 seed = 5
+max_iter = 5000
 
 
 def calculate_position_percentages(positions_list):
@@ -86,6 +87,8 @@ def random_test():
     positions_list = []
     one_dimension_count = 0
     total_index_sets = 0
+    max_iterations = 0
+    total_iterations = 0
     for n in tqdm(test_dimensions):
         Is = create_index_sets(n, uniform=False)
         A = create_A(n, Is)
@@ -99,7 +102,7 @@ def random_test():
         problem = QP(n, Is, rank=random_rank, eccentricity=random_eccentricity, active=random_active, c=False)
         bcqp = BCQP(problem, constraints)
         _, execution_time, iterations, all_gaps, all_convergence_rates, _, _, positions = \
-            solve(bcqp, verbose=0, max_iter=2000)
+            solve(bcqp, verbose=0, max_iter=max_iter)
 
         execution_times.append(execution_time)
         iterations_list.extend(iterations)
@@ -108,6 +111,8 @@ def random_test():
         positions_list.extend(positions)
         one_dimension_count += sum(len(I) == 1 for I in Is)
         total_index_sets += len(Is)
+        max_iterations += iterations.count(max_iter)
+        total_iterations += len(iterations)
 
         data = {'rank': random_rank,
                 'eccentricity': random_eccentricity,
@@ -134,9 +139,11 @@ def random_test():
     mean_iterations = np.mean(iterations_list)
     edge_percentage, inside_percentage = calculate_position_percentages(positions_list)
     one_dimension_percentage = (one_dimension_count / total_index_sets * 100) if total_index_sets else 0
+    max_iterations_percentage = (max_iterations / total_iterations * 100) if total_iterations else 0
     mean_time *= 1000
     std_time *= 1000
     data = {
+        f'max_iterations_percentage': max_iterations_percentage,
         'mean_execution_time (ms)': mean_time,
         'standard_deviation_time (ms)': std_time,
         'mean_gap': mean_gap,
@@ -173,12 +180,14 @@ def test_scaling(Is: list[list[int]], constraints: BoxConstraints, n: int, rank:
     positions_list = []
     one_dimension_count = 0
     total_index_sets = 0
+    max_iterations = 0
+    total_iterations = 0
     for _ in range(100):
         problem = QP(n, Is, rank=rank, eccentricity=eccentricity, active=active, c=False, seed=seed)
         bcqp = BCQP(problem, constraints)
 
         (_, execution_time, iterations, all_gaps, all_convergence_rates, optimal_minimums, constrained_minimums,
-         positions) = solve(bcqp, verbose=0, max_iter=2000)
+         positions) = solve(bcqp, verbose=0, max_iter=max_iter)
 
         # collect general statistics
         execution_times.append(execution_time)
@@ -188,6 +197,8 @@ def test_scaling(Is: list[list[int]], constraints: BoxConstraints, n: int, rank:
         positions_list.extend(positions)
         one_dimension_count += sum(len(I) == 1 for I in Is)
         total_index_sets += len(Is)
+        max_iterations += iterations.count(max_iter)
+        total_iterations += len(iterations)
 
     # Plotting for each subproblem
     for i, gaps in enumerate(all_gaps):
@@ -203,10 +214,12 @@ def test_scaling(Is: list[list[int]], constraints: BoxConstraints, n: int, rank:
     mean_iterations = np.mean(iterations_list)
     edge_percentage, inside_percentage = calculate_position_percentages(positions_list)
     one_dimension_percentage = (one_dimension_count / total_index_sets * 100) if Is else 0
+    max_iterations_percentage = (max_iterations / total_iterations * 100) if total_iterations else 0
     mean_time *= 1000
     std_time *= 1000
 
     new_data = {
+        f'max_iterations_percentage_{param_variable}': max_iterations_percentage,
         f'mean_execution_time_{param_variable} (ms)': mean_time,
         f'standard_deviation_{param_variable} (ms)': std_time,
         f'mean_gap_{param_variable}': mean_gap,
@@ -285,11 +298,11 @@ def test_active_scaling():
 
 
 def test():
-    random_test()
-    test_dimension_scaling()
+    # random_test()
+    # test_dimension_scaling()
     test_rank_scaling()
-    test_eccentricity_scaling()
-    test_active_scaling()
+    # test_eccentricity_scaling()
+    # test_active_scaling()
 
     print('All tests done.\n', flush=True)
 
