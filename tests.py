@@ -32,6 +32,7 @@ def calculate_mean_std(data):
 
 
 def plot_and_save(data, xlabel, ylabel, filename):
+    plt.figure(figsize=(10, 6))
     plt.plot(data)
     plt.semilogy(ylabel='log' in ylabel.lower())
     plt.xlabel(xlabel)
@@ -48,7 +49,7 @@ ensure_dir_exists('tests/eccentricity_scaling')
 ensure_dir_exists('tests/active_scaling')
 
 seed = 5
-max_iter = 5000
+max_iter = 2000
 
 
 def calculate_position_percentages(positions_list):
@@ -160,7 +161,6 @@ def random_test():
 
 def test_scaling(Is: list[list[int]], constraints: BoxConstraints, n: int, rank: float, eccentricity: float,
                  active: float, test_variable: str) -> None:
-
     if test_variable == 'rank':
         param_variable = f'rank_{rank}'
     elif test_variable == 'eccentricity':
@@ -298,11 +298,11 @@ def test_active_scaling():
 
 
 def test():
-    # random_test()
-    # test_dimension_scaling()
+    random_test()
+    test_dimension_scaling()
     test_rank_scaling()
-    # test_eccentricity_scaling()
-    # test_active_scaling()
+    test_eccentricity_scaling()
+    test_active_scaling()
 
     print('All tests done.\n', flush=True)
 

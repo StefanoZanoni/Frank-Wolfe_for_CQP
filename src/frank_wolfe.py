@@ -34,6 +34,7 @@ def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 100
     gaps = [np.inf] * max_iter
     # convergence rate history
     convergence_rates = [1] * max_iter
+    lamda_max = np.max(np.linalg.eigvals(cqp.problem.get_Q()).real)
 
     i = 0
     while i < max_iter:
@@ -53,9 +54,19 @@ def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 100
 
         gap = (v - best_lb) / max(np.abs(v), 1)
         gaps[i] = gap
-        if gap < eps:
-            delta_k = v - best_lb
+
+        delta_k = v - best_lb
+        norm = np.linalg.norm(z - x) ** 2
+        denominator = 2 * lamda_max * norm
+        if norm == 0:
+            convergence_rates[i] = 1
+        elif lamda_max == 0:
             convergence_rates[i] = delta_k / delta_k_minus_1 if i >= 1 else 0
+        else:
+            convergence_rates[i] = 1 - (delta_k / denominator)
+        delta_k_minus_1 = delta_k
+
+        if gap < eps:
             if verbose == 1:
                 if gap == 0:
                     print(f'Iteration {i}: status = optimal, v = {v}, gap = {gap}')
@@ -66,11 +77,6 @@ def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 100
         # line search for alpha
         alpha = ls.compute(x, d)
         x += alpha * d
-
-        # compute the convergence rate
-        delta_k = v - best_lb
-        convergence_rates[i] = delta_k / delta_k_minus_1 if i >= 1 else 0
-        delta_k_minus_1 = delta_k
 
         i += 1
         if verbose == 1:
