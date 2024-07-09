@@ -61,7 +61,13 @@ def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 100
         if norm == 0:
             convergence_rates[i] = 1
         elif lamda_max == 0:
-            convergence_rates[i] = delta_k / delta_k_minus_1 if i >= 1 else 0
+            if i >= 1:
+                if delta_k_minus_1 != 0:
+                    convergence_rates[i] = delta_k / delta_k_minus_1
+                else:
+                    convergence_rates[i] = 1
+            else:
+                convergence_rates[i] = 0
         else:
             convergence_rates[i] = 1 - (delta_k / denominator)
         delta_k_minus_1 = delta_k

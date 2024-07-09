@@ -102,7 +102,7 @@ def random_test():
         random_active = round(np.random.uniform(0, 1), 1)
         problem = QP(n, Is, rank=random_rank, eccentricity=random_eccentricity, active=random_active, c=False)
         bcqp = BCQP(problem, constraints)
-        _, execution_time, iterations, all_gaps, all_convergence_rates, _, _, positions = \
+        _, execution_time, iterations, all_gaps, all_convergence_rates, positions = \
             solve(bcqp, verbose=0, max_iter=max_iter)
 
         execution_times.append(execution_time)
@@ -186,8 +186,9 @@ def test_scaling(Is: list[list[int]], constraints: BoxConstraints, n: int, rank:
         problem = QP(n, Is, rank=rank, eccentricity=eccentricity, active=active, c=False, seed=seed)
         bcqp = BCQP(problem, constraints)
 
-        (_, execution_time, iterations, all_gaps, all_convergence_rates, optimal_minimums, constrained_minimums,
-         positions) = solve(bcqp, verbose=0, max_iter=max_iter)
+        _, execution_time, iterations, all_gaps, all_convergence_rates, positions = solve(bcqp,
+                                                                                          verbose=0,
+                                                                                          max_iter=max_iter)
 
         # collect general statistics
         execution_times.append(execution_time)

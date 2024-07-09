@@ -71,18 +71,14 @@ def main():
     problem = QP(n, Is, rank=rank, eccentricity=eccentricity, active=active, c=False)
     bcqp = BCQP(problem, constraints)
 
-    solution, execution_time, iterations, all_gaps, convergence_rates, optimal_minimums, constrained_minimums, positions = (
+    solution, execution_time, iterations, all_gaps, convergence_rates, positions = (
         solve(bcqp, max_iter=max_iterations, verbose=verbose, plot=plot,
               axis_range=axis_range, dirname=directory))
 
     print(f"Execution Time: {round(execution_time * 1000, 4)} ms")
     print(f"Iterations for each sub-problem: {iterations}")
     print(f'Founded solution: {solution}')
-    print(f'Optimal minimums: {optimal_minimums}')
-    print(f'Constrained minimums: {constrained_minimums}')
     print(f'Positions in the feasible region: {positions}')
-    print(f'Gaps: {[gaps[-1] for gaps in all_gaps]}')
-    print(f'Convergence rates: {[rates[-1] for rates in convergence_rates]}')
 
 
 if __name__ == '__main__':

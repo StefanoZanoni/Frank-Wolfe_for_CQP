@@ -125,7 +125,7 @@ def plot_bcqp(bcqp: BCQP, bounded_minimum_point: np.ndarray, bounded_minimum: fl
 
 def solve(bcqp: BCQP, max_iter: int = 1000, verbose: int = 1, plot: bool = False, dirname: str = './',
           axis_range: tuple[float] = (-10, 10))\
-        -> tuple[np.ndarray, float, list, list[list], list[list], list[float], list[float], list[str]]:
+        -> tuple[np.ndarray, float, list, list[list], list[list], list[str]]:
     """
     Solve the optimization problem for each index set.
 
@@ -142,8 +142,8 @@ def solve(bcqp: BCQP, max_iter: int = 1000, verbose: int = 1, plot: bool = False
     Default is (-10, 10).
      Axis_range[0] is the minimum value, axis_range[1] is the maximum value.
     :return: The optimal solution, execution time, the number of iterations,
-    all the gap histories, all the convergence rate histories, the optimal minimums, the approximated minimums
-     and the positions, inside or on the edge of the feasible region.
+    all the gap histories, all the convergence rate histories, and the positions,
+     inside or on the edge of the feasible region.
     """
 
     dim = bcqp.problem.dim
@@ -151,8 +151,6 @@ def solve(bcqp: BCQP, max_iter: int = 1000, verbose: int = 1, plot: bool = False
     iterations = []
     all_gaps = []
     all_convergence_rates = []
-    optimal_minimums = []
-    approximated_minimums = []
     positions = []
     start = time.time()
     for k in range(bcqp.constraints.K):
@@ -175,8 +173,6 @@ def solve(bcqp: BCQP, max_iter: int = 1000, verbose: int = 1, plot: bool = False
         iterations.append(iteration)
         all_gaps.append(gaps)
         all_convergence_rates.append(convergence_rates)
-        optimal_minimums.append(bcqp.problem.minimum())
-        approximated_minimums.append(v_i)
 
         # check the position of the solution found
         position = bcqp.constraints.check_position(x_i)
@@ -189,5 +185,4 @@ def solve(bcqp: BCQP, max_iter: int = 1000, verbose: int = 1, plot: bool = False
             plot_bcqp(bcqp, x_i, v_i, filename, axis_range=axis_range)
     end = time.time()
 
-    return (x_optimal, end - start, iterations, all_gaps, all_convergence_rates, optimal_minimums,
-            approximated_minimums, positions)
+    return x_optimal, end - start, iterations, all_gaps, all_convergence_rates, positions
