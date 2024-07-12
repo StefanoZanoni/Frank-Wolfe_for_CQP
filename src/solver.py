@@ -123,13 +123,14 @@ def plot_bcqp(bcqp: BCQP, bounded_minimum_point: np.ndarray, bounded_minimum: fl
     fig.write_html(filename + '.html')
 
 
-def solve(bcqp: BCQP, max_iter: int = 1000, verbose: int = 1, plot: bool = False, dirname: str = './',
-          axis_range: tuple[float] = (-10, 10))\
+def solve(bcqp: BCQP, init_edge: bool = True, max_iter: int = 1000, verbose: int = 1, plot: bool = False,
+          dirname: str = './', axis_range: tuple[float] = (-10, 10)) \
         -> tuple[np.ndarray, float, list, list[list], list[list], list[str]]:
     """
     Solve the optimization problem for each index set.
 
     :param bcqp: The box constrained quadratic problem to solve.
+    :param init_edge: Whether to initialize the starting point on the edge of the feasible region.
     :param max_iter: The maximum number of iterations.
     Default is 1000.
     :param verbose: The verbosity level.
@@ -159,9 +160,13 @@ def solve(bcqp: BCQP, max_iter: int = 1000, verbose: int = 1, plot: bool = False
 
         # compute the indexes of k-th index set I
         indexes = bcqp.constraints.A[k, :] != 0
+        sum_indexes = sum(indexes)
         # initialize the starting point
-        x_init = np.zeros(sum(indexes))
-        x_init[0] = 1
+        if init_edge:
+            x_init = np.zeros(sum_indexes)
+            x_init[0] = 1
+        else:
+            x_init = np.full(sum_indexes, 1/sum_indexes)
         # consider only the subproblem relative to the indexes
         bcqp.set_subproblem(k, indexes)
         # solve the subproblem

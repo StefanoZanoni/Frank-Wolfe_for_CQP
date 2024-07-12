@@ -49,6 +49,10 @@ def main():
                         help='The range of the axis for the plot. Default is (0, 1).'
                              ' Axis_range[0] is the minimum value, axis_range[1] is the maximum value.'
                              ' Ignored if --plot or -p is not present.')
+    parser.add_argument('--onedge', '-oe',
+                        type=bool,
+                        default=True,
+                        help='If True, the starting point will be on the edge of the feasible region. Default is True.')
     args = parser.parse_args()
 
     n = args.dimensions
@@ -60,6 +64,7 @@ def main():
     plot = args.plot
     directory = args.directory
     axis_range = args.pltrange
+    on_edge = args.onedge
     if verbose != 0:
         verbose = 1
 
@@ -72,7 +77,7 @@ def main():
     bcqp = BCQP(problem, constraints)
 
     solution, execution_time, iterations, all_gaps, convergence_rates, positions = (
-        solve(bcqp, max_iter=max_iterations, verbose=verbose, plot=plot,
+        solve(bcqp, on_edge, max_iter=max_iterations, verbose=verbose, plot=plot,
               axis_range=axis_range, dirname=directory))
 
     print(f"Execution Time: {round(execution_time * 1000, 4)} ms")
