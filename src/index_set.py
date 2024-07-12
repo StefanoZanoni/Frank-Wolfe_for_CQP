@@ -28,11 +28,11 @@ def create_index_sets(n: int, cardinality_K: int = 1, uniform: bool = True, seed
     ks = set(np.arange(n))
     Is = []
     if uniform:
-        cardinality_I = n // cardinality_K
+        cardinality_I = max(n // cardinality_K, 2)
         for _ in range(cardinality_K + 1):
             if n == 0:
                 break
-            if n < cardinality_I:
+            if n < cardinality_I + 2:
                 cardinality_I = n
             I = random.sample(list(ks), cardinality_I)
             ks -= set(I)
@@ -40,10 +40,9 @@ def create_index_sets(n: int, cardinality_K: int = 1, uniform: bool = True, seed
             n -= cardinality_I
     else:
         while n > 0:
-            if n == 1:
-                cardinality = 1
-            else:
-                cardinality = random.randint(1, n)
+            cardinality = random.randint(2, n)
+            while n - cardinality == 1:
+                cardinality = random.randint(2, n)
             n -= cardinality
             I = random.sample(list(ks), cardinality)
             ks -= set(I)
