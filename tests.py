@@ -76,10 +76,14 @@ def append_to_json_file(data, filename):
         json.dump(file_data, f, indent=2)
 
 
-def random_test():
+def random_test(on_edge: bool = True):
     test_dimensions = np.arange(50, 151, 1)
-    for n in test_dimensions:
-        ensure_dir_exists(f'tests/random_tests/dimension_{n}')
+    if on_edge:
+        for n in test_dimensions:
+            ensure_dir_exists(f'tests/random_tests/dimension_{n}_edge')
+    else:
+        for n in test_dimensions:
+            ensure_dir_exists(f'tests/random_tests/dimension_{n}_inside')
 
     execution_times = []
     iterations_list = []
@@ -123,16 +127,30 @@ def random_test():
                 'positions': positions,
                 'gaps': [gaps[-1] for gaps in all_gaps],
                 'convergence_rates': [convergence_rates[-1] for convergence_rates in all_convergence_rates]}
-        dump_json(data, f'tests/random_tests/dimension_{n}/random_results.json')
+        if on_edge:
+            dump_json(data, f'tests/random_tests/dimension_{n}_edge/random_results_edge.json')
+        else:
+            dump_json(data, f'tests/random_tests/dimension_{n}_inside/random_results_inside.json')
 
-        for i, gaps in enumerate(all_gaps):
-            gap_list.append(gaps[-1])
-            plot_and_save(gaps, 'Iteration', 'Gap (log scale)',
-                          f'tests/random_tests/dimension_{n}/subproblem_{i}_gap.png')
+        if on_edge:
+            for i, gaps in enumerate(all_gaps):
+                gap_list.append(gaps[-1])
+                plot_and_save(gaps, 'Iteration', 'Gap (log scale)',
+                              f'tests/random_tests/dimension_{n}_edge/subproblem_{i}_gap_edge.png')
+        else:
+            for i, gaps in enumerate(all_gaps):
+                gap_list.append(gaps[-1])
+                plot_and_save(gaps, 'Iteration', 'Gap (log scale)',
+                              f'tests/random_tests/dimension_{n}_inside/subproblem_{i}_gap_inside.png')
 
-        for i, convergence_rates in enumerate(all_convergence_rates):
-            plot_and_save(convergence_rates, 'Iteration', 'Convergence rate',
-                          f'tests/random_tests/dimension_{n}/subproblem_{i}_convergence_rate.png')
+        if on_edge:
+            for i, convergence_rates in enumerate(all_convergence_rates):
+                plot_and_save(convergence_rates, 'Iteration', 'Convergence rate',
+                              f'tests/random_tests/dimension_{n}_edge/subproblem_{i}_convergence_rate_edge.png')
+        else:
+            for i, convergence_rates in enumerate(all_convergence_rates):
+                plot_and_save(convergence_rates, 'Iteration', 'Convergence rate',
+                              f'tests/random_tests/dimension_{n}_inside/subproblem_{i}_convergence_rate_inside.png')
 
     mean_time, std_time = calculate_mean_std(execution_times)
     mean_gap, std_gap = calculate_mean_std(gap_list)
@@ -156,7 +174,10 @@ def random_test():
         'inside_percentage': inside_percentage,
         'one_dimension_percentage': one_dimension_percentage
     }
-    dump_json(data, 'tests/random_tests/random_tests_statistics.json')
+    if on_edge:
+        dump_json(data, f'tests/random_tests/random_tests_statistics_edge.json')
+    else:
+        dump_json(data, f'tests/random_tests/random_tests_statistics_inside.json')
 
 
 def test_scaling(Is: list[list[int]], constraints: BoxConstraints, n: int, rank: float, eccentricity: float,
@@ -299,11 +320,12 @@ def test_active_scaling():
 
 
 def test():
-    random_test()
-    test_dimension_scaling()
-    test_rank_scaling()
-    test_eccentricity_scaling()
-    test_active_scaling()
+    random_test(on_edge=True)
+    random_test(on_edge=False)
+    # test_dimension_scaling()
+    # test_rank_scaling()
+    # test_eccentricity_scaling()
+    # test_active_scaling()
 
     print('All tests done.\n', flush=True)
 
