@@ -93,7 +93,4 @@ def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 100
             else:
                 print(f'Iteration {i}: status = non optimal, v = {v}, gap = {gap}')
 
-    if i == 0:
-        return x, v, i, [gaps[0]], [convergence_rates[0]]
-    else:
-        return x, v, i, gaps[:i + 1], convergence_rates[:i + 1]
+    return x, v, i, gaps[:i + 1], convergence_rates[:i + 1]
