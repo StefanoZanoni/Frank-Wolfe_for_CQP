@@ -23,6 +23,8 @@ def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 100
     :return: The approximated point, the approximated value, the number of iterations, the gap history
      and the convergence rate history.
     """
+    if len(x0) == 1:
+        return x0, cqp.problem.evaluate(x0), 0, [0], [1]
 
     # starting point
     x = x0.copy()
