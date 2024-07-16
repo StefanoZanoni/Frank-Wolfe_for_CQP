@@ -173,7 +173,7 @@ def random_test(on_edge: bool = True, max_iter: int = 2000, seed: int = None):
     mean_time *= 1000
     std_time *= 1000
     data = {
-        f'max_iterations_percentage': max_iterations_percentage,
+        f'max_iterations_percentage (%)': max_iterations_percentage,
         'mean_execution_time (ms)': mean_time,
         'standard_deviation_time (ms)': std_time,
         'mean_gap': mean_gap,
@@ -246,13 +246,13 @@ def test_scaling(Is: list[list[int]], constraints: BoxConstraints, n: int, rank:
     mean_convergence, std_convergence = calculate_mean_std(convergence_list)
     mean_iterations = np.mean(iterations_list)
     edge_percentage, inside_percentage = calculate_position_percentages(positions_list)
-    one_dimension_percentage = (one_dimension_count / total_index_sets * 100) if Is else 0
+    one_dimension_percentage = (one_dimension_count / total_index_sets * 100) if total_index_sets else 0
     max_iterations_percentage = (max_iterations / total_iterations * 100) if total_iterations else 0
     mean_time *= 1000
     std_time *= 1000
 
     new_data = {
-        f'max_iterations_percentage_{param_variable}': max_iterations_percentage,
+        f'max_iterations_percentage_{param_variable} (%)': max_iterations_percentage,
         f'mean_execution_time_{param_variable} (ms)': mean_time,
         f'standard_deviation_{param_variable} (ms)': std_time,
         f'mean_gap_{param_variable}': mean_gap,
