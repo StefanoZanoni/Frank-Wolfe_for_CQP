@@ -1,6 +1,7 @@
 import plotly.graph_objects as go
 import numpy as np
 import time
+import matplotlib.pyplot as plt
 
 from src.frank_wolfe import frank_wolfe
 from src.cqp import BCQP
@@ -123,30 +124,23 @@ def plot_bcqp(bcqp: BCQP, bounded_minimum_point: np.ndarray, bounded_minimum: fl
     fig.write_html(filename + '.html')
 
 
-def solve(bcqp: BCQP, init_edge: bool = True, max_iter: int = 1000, verbose: int = 1, plot: bool = False,
-          dirname: str = './', axis_range: tuple[float] = (-10, 10)) \
-        -> tuple[np.ndarray, float, list, list[list], list[list], list[str]]:
-    """
-    Solve the optimization problem for each index set.
+def plot_and_save(data, xlabel, ylabel, filename, x_data=None, exclude_first=False):
+    plt.figure(figsize=(10, 6))
+    if x_data is None:
+        x_data = np.arange(len(data))
+    if exclude_first:
+        x_data = x_data[1:]
+        data = data[1:]
+    plt.plot(x_data, data)
+    if 'log' in ylabel.lower():
+        plt.yscale('log')
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.savefig(filename)
+    plt.close()
 
-    :param bcqp: The box constrained quadratic problem to solve.
-    :param init_edge: Whether to initialize the starting point on the edge of the feasible region.
-    :param max_iter: The maximum number of iterations.
-    Default is 1000.
-    :param verbose: The verbosity level.
-    Default is 1.
-    :param plot: Whether to plot the results.
-    Default is False.
-    :param dirname: The directory where to save the plots.
-    Default is './'.
-    :param axis_range: The range of the axis for the plot.
-    Default is (-10, 10).
-     Axis_range[0] is the minimum value, axis_range[1] is the maximum value.
-    :return: The optimal solution, execution time, the number of iterations,
-    all the gap histories, all the convergence rate histories, and the positions,
-     inside or on the edge of the feasible region.
-    """
 
+def solve(bcqp, init_edge=True, max_iter=2000, verbose=1, plot=True, dirname='./', axis_range=(-10, 10)):
     dim = bcqp.problem.dim
     x_optimal = np.empty(dim)
     iterations = []
@@ -154,6 +148,7 @@ def solve(bcqp: BCQP, init_edge: bool = True, max_iter: int = 1000, verbose: int
     all_convergence_rates = []
     positions = []
     start = time.time()
+
     for k in range(bcqp.constraints.K):
         if verbose == 1:
             print(f'Sub problem {k}')
@@ -170,8 +165,7 @@ def solve(bcqp: BCQP, init_edge: bool = True, max_iter: int = 1000, verbose: int
         # consider only the subproblem relative to the indexes
         bcqp.set_subproblem(k, indexes)
         # solve the subproblem
-        x_i, v_i, iteration, gaps, convergence_rates = frank_wolfe(bcqp, x_init, eps=1e-6, max_iter=max_iter,
-                                                                   verbose=verbose)
+        x_i, v_i, iteration, gaps, convergence_rates = frank_wolfe(bcqp, x_init, eps=1e-6, max_iter=max_iter, verbose=verbose)
         # merge the subproblem solution with the optimal solution
         x_optimal[indexes] = x_i
 
@@ -183,11 +177,19 @@ def solve(bcqp: BCQP, init_edge: bool = True, max_iter: int = 1000, verbose: int
         position = bcqp.constraints.check_position(x_i)
         positions.append(position)
 
+        """difference_gap = [gaps[i] - gaps[i + 1] for i in range(len(gaps) - 1)]
+
+        print(gaps)
+        print('\n')
+        print(convergence_rates)
+
+        
+        plot_and_save(gaps, 'Iteration', 'Gap_log', f'{dirname}/{k}_gap.png')
+        plot_and_save(convergence_rates, 'Iteration', 'Convergence Rate_log', f'{dirname}/{k}_convergence_rate.png', exclude_first=True)"""
+
         if verbose == 1:
             print('\n')
-        if plot:
-            filename = dirname + f'plot_bcqp_{k}.png'
-            plot_bcqp(bcqp, x_i, v_i, filename, axis_range=axis_range)
+
     end = time.time()
 
     return x_optimal, end - start, iterations, all_gaps, all_convergence_rates, positions

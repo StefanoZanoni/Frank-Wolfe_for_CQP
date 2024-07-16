@@ -10,7 +10,7 @@ def solve_LMO(grad: np.ndarray) -> np.ndarray:
     return z
 
 
-def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 1000, verbose: int = 1) \
+def frank_wolfe(cqp, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 1000, verbose: int = 1) \
         -> tuple[np.ndarray, float, int, list[float], list[float]]:
     """
     Implement the Frank-Wolfe algorithm for solving convex optimization problems.
@@ -26,63 +26,54 @@ def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 100
     if len(x0) == 1:
         return x0, cqp.problem.evaluate(x0), 0, [0], [1]
 
-    # starting point
+    # Starting point
     x = x0.copy()
-    # best lower bound found so far
+    # Best lower bound found so far
     best_lb = -np.Inf
-    # line search method
+    # Line search method
     ls = ExactLineSearch(cqp.problem)
-    # gap history
-    gaps = [np.inf] * max_iter
-    # convergence rate history
-    convergence_rates = [1] * max_iter
-    lamda_max = np.max(np.linalg.eigvals(cqp.problem.get_Q()).real)
+    # Gap history
+    gaps = []
+    # Convergence rate history
+    convergence_rates = []
 
     i = 0
     while i < max_iter:
+        # Evaluate the objective function at the current point
         v = cqp.problem.evaluate(x)
+        # Compute the gradient at the current point
         grad = cqp.problem.derivative(x)
 
-        # solve the linear minimization oracle
+        # Solve the linear minimization oracle
         z = solve_LMO(grad)
 
-        # first order model evaluation
+        # Compute the direction
         d = z - x
         lb = v + np.dot(grad.T, d)
 
-        # update the best lower bound
+        # Update the best lower bound
         if lb > best_lb:
             best_lb = lb
 
+        # Compute the duality gap
         gap = (v - best_lb) / max(np.abs(v), 1)
-        gaps[i] = gap
+        gaps.append(gap)
 
-        delta_k = v - best_lb
-        norm = np.linalg.norm(z - x) ** 2
-        denominator = 2 * lamda_max * norm
-        if norm == 0:
-            convergence_rates[i] = 1
-        elif lamda_max == 0:
-            if i >= 1:
-                if delta_k_minus_1 != 0:
-                    convergence_rates[i] = delta_k / delta_k_minus_1
-                else:
-                    convergence_rates[i] = 1
-            else:
-                convergence_rates[i] = 0
+        if i > 0:
+            # Compute the convergence rate
+            convergence_rate = gaps[-1] / gaps[-2] if gaps[-2] != 0 else convergence_rates[-1]
+            convergence_rates.append(convergence_rate)
         else:
-            convergence_rates[i] = 1 - (delta_k / denominator)
-        delta_k_minus_1 = delta_k
+            # Append an initial convergence rate for the first iteration
+            convergence_rates.append(0)
 
+        # Check the stopping criterion
         if gap < eps:
             if verbose == 1:
-                if gap == 0:
-                    print(f'Iteration {i}: status = optimal, v = {v}, gap = {gap}')
-                else:
-                    print(f'Iteration {i}: status = approximated, v = {v}, gap = {gap}')
+                print(f'Iteration {i}: status = {"optimal" if gap == 0 else "approximated"}, v = {v}, gap = {gap}')
             break
 
-        # line search for alpha
+        # Line search for step size
         alpha = ls.compute(x, d)
         x += alpha * d
 
@@ -91,6 +82,14 @@ def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 100
             if i >= max_iter:
                 print(f'Iteration {i}: status = stopped, v = {v}, gap = {gap}')
             else:
-                print(f'Iteration {i}: status = non optimal, v = {v}, gap = {gap}')
+                print(f'Iteration {i}: status = non-optimal, v = {v}, gap = {gap}')
 
-    return x, v, i, gaps[:i + 1], convergence_rates[:i + 1]
+    # Handle the convergence rate at the last iteration
+    if len(gaps) > 1:
+        final_convergence_rate = gaps[-1] / gaps[-2] if gaps[-2] != 0 else convergence_rates[-1]
+        convergence_rates.append(final_convergence_rate)
+    
+    if len(convergence_rates) > 1:
+        convergence_rates[0] = convergence_rates[1]
+    
+    return x, v, i, gaps, convergence_rates

@@ -31,15 +31,29 @@ def calculate_mean_std(data):
     return np.mean(data), np.std(data)
 
 
-def plot_and_save(data, xlabel, ylabel, filename):
+"""def plot_and_save(data, xlabel, ylabel, filename):
     plt.figure(figsize=(10, 6))
     plt.plot(data)
     plt.semilogy(ylabel='log' in ylabel.lower())
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
     plt.savefig(filename)
-    plt.close()
+    plt.close()"""
 
+def plot_and_save(data, xlabel, ylabel, filename, x_data=None, exclude_first=False):
+    plt.figure(figsize=(10, 6))
+    if x_data is None:
+        x_data = np.arange(len(data))
+    if exclude_first:
+        x_data = x_data[1:]
+        data = data[1:]
+    plt.plot(x_data, data)
+    if 'log' in ylabel.lower():
+        plt.yscale('log')
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.savefig(filename)
+    plt.close()
 
 ensure_dir_exists('tests')
 ensure_dir_exists('tests/random_tests')
@@ -145,12 +159,12 @@ def random_test(on_edge: bool = True):
 
         if on_edge:
             for i, convergence_rates in enumerate(all_convergence_rates):
-                plot_and_save(convergence_rates, 'Iteration', 'Convergence rate',
-                              f'tests/random_tests/dimension_{n}_edge/subproblem_{i}_convergence_rate_edge.png')
+                plot_and_save(convergence_rates, 'Iteration', 'Convergence rate (log scale)',
+                              f'tests/random_tests/dimension_{n}_edge/subproblem_{i}_convergence_rate_edge.png',exclude_first=True)
         else:
             for i, convergence_rates in enumerate(all_convergence_rates):
-                plot_and_save(convergence_rates, 'Iteration', 'Convergence rate',
-                              f'tests/random_tests/dimension_{n}_inside/subproblem_{i}_convergence_rate_inside.png')
+                plot_and_save(convergence_rates, 'Iteration', 'Convergence rate (log scale)',
+                              f'tests/random_tests/dimension_{n}_inside/subproblem_{i}_convergence_rate_inside.png', exclude_first=True)
 
     mean_time, std_time = calculate_mean_std(execution_times)
     mean_gap, std_gap = calculate_mean_std(gap_list)
@@ -227,8 +241,8 @@ def test_scaling(Is: list[list[int]], constraints: BoxConstraints, n: int, rank:
         plot_and_save(gaps, 'Iteration', 'Gap (log scale)',
                       f'{problem_dir}/subproblem_{i}_gap.png')
     for i, convergence_rates in enumerate(all_convergence_rates):
-        plot_and_save(convergence_rates, 'Iteration', 'Convergence rate',
-                      f'{problem_dir}/subproblem_{i}_convergence_rate.png')
+        plot_and_save(convergence_rates, 'Iteration', 'Convergence rate (log scale)',
+                      f'{problem_dir}/subproblem_{i}_convergence_rate.png', exclude_first=True)
 
     mean_time, std_time = calculate_mean_std(execution_times)
     mean_gap, std_gap = calculate_mean_std(gap_list)
