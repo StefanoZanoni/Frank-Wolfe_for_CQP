@@ -331,12 +331,12 @@ def test_active_scaling(seed: int = None):
 
 
 def test():
-    # random_test(on_edge=True, seed=5)
-    # random_test(on_edge=False, seed=5)
+    random_test(on_edge=True)
+    random_test(on_edge=False)
     test_dimension_scaling()
-    # test_rank_scaling()
-    # test_eccentricity_scaling()
-    # test_active_scaling()
+    test_rank_scaling()
+    test_eccentricity_scaling()
+    test_active_scaling()
 
     print('All tests done.\n', flush=True)
 

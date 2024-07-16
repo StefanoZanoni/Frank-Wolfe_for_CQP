@@ -1,5 +1,5 @@
 from src.cqp import CQP
-from src.line_search import ExactLineSearch
+from src.line_search import ExactLineSearch, BackTrackingArmijoStrongWolfeLineSearch
 import numpy as np
 
 
