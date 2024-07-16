@@ -49,6 +49,7 @@ def frank_wolfe(cqp, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 1000, ve
 
         # Compute the direction
         d = z - x
+        # Compute the lower bound
         lb = v + np.dot(grad.T, d)
 
         # Update the best lower bound

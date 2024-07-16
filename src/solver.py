@@ -140,13 +140,15 @@ def plot_and_save(data, xlabel, ylabel, filename, x_data=None, exclude_first=Fal
     plt.close()
 
 
-def solve(bcqp, init_edge=True, max_iter=2000, verbose=1, plot=True, dirname='./', axis_range=(-10, 10)):
+def solve(bcqp: BCQP, init_edge: bool = True, max_iter: int = 2000, verbose: int = 1, plot: bool = False,
+          dirname: str = './', axis_range: tuple[int] = (-10, 10)):
     dim = bcqp.problem.dim
     x_optimal = np.empty(dim)
     iterations = []
     all_gaps = []
     all_convergence_rates = []
     positions = []
+
     start = time.time()
 
     for k in range(bcqp.constraints.K):
@@ -165,7 +167,10 @@ def solve(bcqp, init_edge=True, max_iter=2000, verbose=1, plot=True, dirname='./
         # consider only the subproblem relative to the indexes
         bcqp.set_subproblem(k, indexes)
         # solve the subproblem
-        x_i, v_i, iteration, gaps, convergence_rates = frank_wolfe(bcqp, x_init, eps=1e-6, max_iter=max_iter, verbose=verbose)
+        x_i, v_i, iteration, gaps, convergence_rates = frank_wolfe(bcqp, x_init,
+                                                                   eps=1e-6,
+                                                                   max_iter=max_iter,
+                                                                   verbose=verbose)
         # merge the subproblem solution with the optimal solution
         x_optimal[indexes] = x_i
 
@@ -182,6 +187,7 @@ def solve(bcqp, init_edge=True, max_iter=2000, verbose=1, plot=True, dirname='./
         if plot:
             filename = dirname + f'plot_bcqp_{k}.png'
             plot_bcqp(bcqp, x_i, v_i, filename, axis_range=axis_range)
+
     end = time.time()
 
     return x_optimal, end - start, iterations, all_gaps, all_convergence_rates, positions

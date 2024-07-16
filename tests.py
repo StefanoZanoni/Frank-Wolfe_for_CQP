@@ -54,9 +54,6 @@ ensure_dir_exists('tests/rank_scaling')
 ensure_dir_exists('tests/eccentricity_scaling')
 ensure_dir_exists('tests/active_scaling')
 
-seed = 5
-max_iter = 2000
-
 
 def calculate_position_percentages(positions_list):
     edge_count = positions_list.count('edge')
@@ -82,7 +79,7 @@ def append_to_json_file(data, filename):
         json.dump(file_data, f, indent=2)
 
 
-def random_test(on_edge: bool = True):
+def random_test(on_edge: bool = True, max_iter: int = 2000, seed: int = None):
     test_dimensions = np.arange(50, 151, 1)
     if on_edge:
         for n in test_dimensions:
@@ -101,7 +98,7 @@ def random_test(on_edge: bool = True):
     max_iterations = 0
     total_iterations = 0
     for n in tqdm(test_dimensions):
-        Is = create_index_sets(n, uniform=False)
+        Is = create_index_sets(n, uniform=False, seed=seed)
         A = create_A(n, Is)
         b = create_b(n, len(Is))
 
@@ -110,10 +107,16 @@ def random_test(on_edge: bool = True):
         random_eccentricity = round(np.random.uniform(0, 1), 4)
         random_rank = np.random.uniform(0.01, 1.01)
         random_active = round(np.random.uniform(0, 1), 1)
-        problem = QP(n, Is, rank=random_rank, eccentricity=random_eccentricity, active=random_active, c=False)
+        problem = QP(n, Is,
+                     rank=random_rank,
+                     eccentricity=random_eccentricity,
+                     active=random_active,
+                     c=False,
+                     seed=seed)
         bcqp = BCQP(problem, constraints)
-        _, execution_time, iterations, all_gaps, all_convergence_rates, positions = \
-            solve(bcqp, verbose=0, max_iter=max_iter)
+        _, execution_time, iterations, all_gaps, all_convergence_rates, positions = solve(bcqp,
+                                                                                          verbose=0,
+                                                                                          max_iter=max_iter)
 
         execution_times.append(execution_time)
         iterations_list.extend(iterations)
@@ -189,7 +192,7 @@ def random_test(on_edge: bool = True):
 
 
 def test_scaling(Is: list[list[int]], constraints: BoxConstraints, n: int, rank: float, eccentricity: float,
-                 active: float, test_variable: str) -> None:
+                 active: float, test_variable: str, max_iter: int = 2000, seed: int = None) -> None:
     if test_variable == 'rank':
         param_variable = f'rank_{rank}'
     elif test_variable == 'eccentricity':
@@ -264,76 +267,76 @@ def test_scaling(Is: list[list[int]], constraints: BoxConstraints, n: int, rank:
     dump_json(new_data, f'{problem_dir}/{param_variable}_statistics.json')
 
 
-def test_dimension_scaling():
+def test_dimension_scaling(seed: int = None):
     test_dimensions = [10, 100, 250, 500]
     rank = 1
     eccentricity = 0.5
     active = 1
 
     for n in tqdm(test_dimensions):
-        Is = create_index_sets(n, uniform=False)
+        Is = create_index_sets(n, uniform=False, seed=seed)
         A = create_A(n, Is)
         b = create_b(n, len(Is))
 
         constraints = BoxConstraints(A, b, len(Is), n, ineq=True)
-        test_scaling(Is, constraints, n, rank, eccentricity, active, 'dimension')
+        test_scaling(Is, constraints, n, rank, eccentricity, active, 'dimension', seed=seed)
 
 
-def test_rank_scaling():
+def test_rank_scaling(seed: int = None):
     n = 50
     test_ranks = list(np.arange(0.1, 1.1, 0.1, dtype=float))
     test_ranks = [float(rank) for rank in test_ranks]
     eccentricity = 0.5
     active = 1
 
-    Is = create_index_sets(n, uniform=True, cardinality_K=5)
+    Is = create_index_sets(n, uniform=True, cardinality_K=5, seed=seed)
     A = create_A(n, Is)
     b = create_b(n, len(Is))
     constraints = BoxConstraints(A, b, len(Is), n, ineq=True)
 
     for rank in tqdm(test_ranks):
-        test_scaling(Is, constraints, n, rank, eccentricity, active, 'rank')
+        test_scaling(Is, constraints, n, rank, eccentricity, active, 'rank', seed=seed)
 
 
-def test_eccentricity_scaling():
+def test_eccentricity_scaling(seed: int = None):
     n = 50
     rank = 1
     test_eccentricities = list(np.arange(0, 1, 0.1))
     test_eccentricities = [float(eccentricity) for eccentricity in test_eccentricities]
     active = 1
 
-    Is = create_index_sets(n, uniform=True, cardinality_K=5)
+    Is = create_index_sets(n, uniform=True, cardinality_K=5, seed=seed)
     A = create_A(n, Is)
     b = create_b(n, len(Is))
     constraints = BoxConstraints(A, b, len(Is), n, ineq=True)
 
     for eccentricity in tqdm(test_eccentricities):
-        test_scaling(Is, constraints, n, rank, eccentricity, active, 'eccentricity')
+        test_scaling(Is, constraints, n, rank, eccentricity, active, 'eccentricity', seed=seed)
 
 
-def test_active_scaling():
+def test_active_scaling(seed: int = None):
     n = 50
     rank = 1
     eccentricity = 0.5
     test_actives = list(np.arange(0, 1.1, 0.1))
     test_actives = [float(active) for active in test_actives]
 
-    Is = create_index_sets(n, uniform=True, cardinality_K=5)
+    Is = create_index_sets(n, uniform=True, cardinality_K=5, seed=seed)
     A = create_A(n, Is)
     b = create_b(n, len(Is))
     constraints = BoxConstraints(A, b, len(Is), n, ineq=True)
 
     for active in tqdm(test_actives):
-        test_scaling(Is, constraints, n, rank, eccentricity, active, 'active')
+        test_scaling(Is, constraints, n, rank, eccentricity, active, 'active', seed=seed)
 
 
 def test():
-    random_test(on_edge=True)
-    random_test(on_edge=False)
+    # random_test(on_edge=True, seed=5)
+    # random_test(on_edge=False, seed=5)
     test_dimension_scaling()
-    test_rank_scaling()
-    test_eccentricity_scaling()
-    test_active_scaling()
+    # test_rank_scaling()
+    # test_eccentricity_scaling()
+    # test_active_scaling()
 
     print('All tests done.\n', flush=True)
 
