@@ -177,19 +177,11 @@ def solve(bcqp, init_edge=True, max_iter=2000, verbose=1, plot=True, dirname='./
         position = bcqp.constraints.check_position(x_i)
         positions.append(position)
 
-        """difference_gap = [gaps[i] - gaps[i + 1] for i in range(len(gaps) - 1)]
-
-        print(gaps)
-        print('\n')
-        print(convergence_rates)
-
-        
-        plot_and_save(gaps, 'Iteration', 'Gap_log', f'{dirname}/{k}_gap.png')
-        plot_and_save(convergence_rates, 'Iteration', 'Convergence Rate_log', f'{dirname}/{k}_convergence_rate.png', exclude_first=True)"""
-
         if verbose == 1:
             print('\n')
-
+        if plot:
+            filename = dirname + f'plot_bcqp_{k}.png'
+            plot_bcqp(bcqp, x_i, v_i, filename, axis_range=axis_range)
     end = time.time()
 
     return x_optimal, end - start, iterations, all_gaps, all_convergence_rates, positions
