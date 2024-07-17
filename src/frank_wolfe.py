@@ -66,7 +66,7 @@ def frank_wolfe(cqp, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 1000, ve
             convergence_rates.append(convergence_rate)
         else:
             # Append an initial convergence rate for the first iteration
-            convergence_rates.append(0)
+            convergence_rates.append(1)
 
         # Check the stopping criterion
         if gap < eps:
