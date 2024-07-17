@@ -82,7 +82,7 @@ class Constraints:
         if not self.evaluate(x):
             return 'outside'
 
-        if np.any(x == 0):
+        if np.any(x == 1):
             return 'edge'
         else:
             return 'inside'
