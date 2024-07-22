@@ -1,6 +1,8 @@
 # Frank-Wolfe_for_CQP
 
-This project is an implementation of the Frank-Wolfe algorithm for Constrained Quadratic Problems.
+This project is an implementation of the Frank-Wolfe algorithm for Box Constrained Quadratic Problems.
+
+![Problem](./traccia.png "Problem description")
 
 ## Getting Started
 
@@ -17,7 +19,7 @@ To run the code, use the following command:
 python3 fw.py [-n/--dimensions DIMENSION_OF_THE_PROBLEM] [-r/--rank RANK_OF_THE_MATRIX]
  [-e/--eccentricity ECCENTRICITY_OF_THE_MATRIX] [-a/--active PERCENTAGE_OF_ACTIVE_CONSTRAINTS]
   [-i/--iterations MAX_NUMBER_OF_ITERATIONS] [-v/--verbose VERBOSITY_LEVEL] [-p/--plot] [--directory/-d DIRECTORY_PATH]
-  [--pltrange/-pr PLOT_RANGE] [--onedge/or START_ON_THE_EDGE_OR_NOT] [--help/-h]
+  [--pltrange/-pr PLOT_RANGE] [--onedge/-oe START_ON_THE_EDGE_OR_NOT] [--help/-h]
 ```
 or 
 ```bash
