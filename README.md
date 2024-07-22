@@ -2,7 +2,7 @@
 
 This project is an implementation of the Frank-Wolfe algorithm for Box Constrained Quadratic Problems.
 
-![Problem](./traccia.png "Problem description")
+![Problem](./problem_description.png "Problem description")
 
 ## Getting Started
 
