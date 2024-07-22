@@ -13,15 +13,20 @@ def solve_LMO(grad: np.ndarray) -> np.ndarray:
 def frank_wolfe(cqp, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 1000, verbose: int = 1) \
         -> tuple[np.ndarray, float, int, list[float], list[float]]:
     """
-    Implement the Frank-Wolfe algorithm for solving convex optimization problems.
+    Implements the Frank-Wolfe algorithm for solving convex quadratic optimization problems.
 
-    :param cqp: A convex quadratic problem (CQP).
-    :param x0: The initial point.
-    :param eps: The tolerance for the stopping criterion (default is 1e-6).
-    :param max_iter: The maximum number of iterations (default is 1000).
-    :param verbose: The verbosity level (default is 1).
-    :return: The approximated point, the approximated value, the number of iterations, the gap history
-     and the convergence rate history.
+    Parameters:
+    - cqp (CQP): An instance of a convex quadratic problem.
+    - x0 (np.ndarray): The initial point for the optimization process.
+    - eps (float, optional): The tolerance for the stopping criterion. Defaults to 1e-6.
+    - max_iter (int, optional): The maximum number of iterations to perform. Defaults to 1000.
+    - verbose (int, optional): The verbosity level of the output. If set to 1, detailed iteration data is printed.
+     Default to 1.
+
+    Returns:
+    - tuple[np.ndarray, float, int, list[float], list[float]]: A tuple containing the approximated optimal point,
+     the value of the objective function at this point, the number of iterations performed,
+      the history of the duality gaps, and the history of convergence rates.
     """
     if len(x0) == 1:
         return x0, cqp.problem.evaluate(x0), 0, [0], [1]

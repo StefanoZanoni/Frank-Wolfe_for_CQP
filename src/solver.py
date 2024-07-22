@@ -10,6 +10,20 @@ from src.constraints import BoxConstraints
 
 def plot_bcqp(bcqp: BCQP, bounded_minimum_point: np.ndarray, bounded_minimum: float, filename: str,
               axis_range: tuple[float] = (-10, 10)) -> None:
+    """
+    Plots the BCQP problem's function, constrained values, constrained minimum, and global minimum.
+
+    Parameters:
+    - bcqp (BCQP): The box constrained quadratic problem instance.
+    - bounded_minimum_point (np.ndarray): The point of the bounded minimum.
+    - bounded_minimum (float): The value of the bounded minimum.
+    - filename (str): The filename for the output HTML plot.
+    - axis_range (tuple[float, float], optional): The range of the axis for plotting. Defaults to (-10, 10).
+
+    Returns:
+    - None
+    """
+
     min_value = axis_range[0]
     max_value = axis_range[1]
 
@@ -36,14 +50,14 @@ def plot_bcqp(bcqp: BCQP, bounded_minimum_point: np.ndarray, bounded_minimum: fl
                                  name='Constrained Values',
                                  marker=dict(color=np.linspace(0, 1, len(y_values_constrained)), colorscale='YlGnBu')))
 
-        # add the constrained minimum to the plot
+        # Add the constrained minimum to the plot
         fig.add_trace(go.Scatter(x=bounded_minimum_point,
                                  y=[bounded_minimum],
                                  mode='markers',
                                  name='Constrained Minimum',
                                  marker=dict(color=[1], colorscale='YlGnBu')))
 
-        # add the global minimum to the plot
+        # Add the global minimum to the plot
         fig.add_trace(go.Scatter(x=bcqp.problem.minimum_point(),
                                  y=[bcqp.problem.minimum()],
                                  mode='markers',
@@ -89,7 +103,7 @@ def plot_bcqp(bcqp: BCQP, bounded_minimum_point: np.ndarray, bounded_minimum: fl
                                    name='Constrained Values',
                                    marker=dict(color=np.linspace(0, 1, X_constrained.shape[0]), colorscale='YlGnBu')))
 
-        # add the constrained minimum to the plot
+        # Add the constrained minimum to the plot
         fig.add_trace(go.Scatter3d(x=[bounded_minimum_point[0]],
                                    y=[bounded_minimum_point[1]],
                                    z=[bounded_minimum],
@@ -97,7 +111,7 @@ def plot_bcqp(bcqp: BCQP, bounded_minimum_point: np.ndarray, bounded_minimum: fl
                                    name='Constrained Minimum',
                                    marker=dict(color=[1], colorscale='YlGnBu', size=2)))
 
-        # add the global minimum to the plot
+        # Add the global minimum to the plot
         fig.add_trace(go.Scatter3d(x=[bcqp.problem.minimum_point()[0]],
                                    y=[bcqp.problem.minimum_point()[1]],
                                    z=[bcqp.problem.minimum()],
@@ -124,24 +138,24 @@ def plot_bcqp(bcqp: BCQP, bounded_minimum_point: np.ndarray, bounded_minimum: fl
     fig.write_html(filename + '.html')
 
 
-def plot_and_save(data, xlabel, ylabel, filename, x_data=None, exclude_first=False):
-    plt.figure(figsize=(10, 6))
-    if x_data is None:
-        x_data = np.arange(len(data))
-    if exclude_first:
-        x_data = x_data[1:]
-        data = data[1:]
-    plt.plot(x_data, data)
-    if 'log' in ylabel.lower():
-        plt.yscale('log')
-    plt.xlabel(xlabel)
-    plt.ylabel(ylabel)
-    plt.savefig(filename)
-    plt.close()
-
-
 def solve(bcqp: BCQP, init_edge: bool = True, max_iter: int = 2000, verbose: int = 1, plot: bool = False,
           dirname: str = './', axis_range: tuple[int] = (-10, 10)):
+    """
+    Solves the BCQP problem using the Frank-Wolfe algorithm.
+
+    Parameters:
+    - bcqp (BCQP): The box constrained quadratic problem instance.
+    - init_edge (bool, optional): If True, initializes the starting point at the edge. Defaults to True.
+    - max_iter (int, optional): The maximum number of iterations for the Frank-Wolfe algorithm. Defaults to 2000.
+    - verbose (int, optional): The verbosity level. If 1, prints detailed logs. Defaults to 1.
+    - plot (bool, optional): If True, plots the subproblems. Defaults to False.
+    - dirname (str, optional): The directory name to save plots if plotting is enabled. Defaults to './'.
+    - axis_range (tuple[int, int], optional): The range of the axis for plotting. Defaults to (-10, 10).
+
+    Returns:
+    - A tuple containing the optimal solution, the time taken, iterations, gaps, convergence rates, and positions.
+    """
+
     dim = bcqp.problem.dim
     x_optimal = np.empty(dim)
     iterations = []
@@ -155,30 +169,30 @@ def solve(bcqp: BCQP, init_edge: bool = True, max_iter: int = 2000, verbose: int
         if verbose == 1:
             print(f'Sub problem {k}')
 
-        # compute the indexes of k-th index set I
+        # Compute the indexes of k-th index set I
         indexes = bcqp.constraints.A[k, :] != 0
         sum_indexes = sum(indexes)
-        # initialize the starting point
+        # Initialize the starting point
         if init_edge:
             x_init = np.zeros(sum_indexes)
             x_init[0] = 1
         else:
-            x_init = np.full(sum_indexes, 1/sum_indexes)
-        # consider only the subproblem relative to the indexes
+            x_init = np.full(sum_indexes, 1 / sum_indexes)
+        # Consider only the subproblem relative to the indexes
         bcqp.set_subproblem(k, indexes)
-        # solve the subproblem
+        # Solve the subproblem
         x_i, v_i, iteration, gaps, convergence_rates = frank_wolfe(bcqp, x_init,
                                                                    eps=1e-6,
                                                                    max_iter=max_iter,
                                                                    verbose=verbose)
-        # merge the subproblem solution with the optimal solution
+        # Merge the subproblem solution with the optimal solution
         x_optimal[indexes] = x_i
 
         iterations.append(iteration)
         all_gaps.append(gaps)
         all_convergence_rates.append(convergence_rates)
 
-        # check the position of the solution found
+        # Check the position of the solution found
         position = bcqp.constraints.check_position(x_i)
         positions.append(position)
 

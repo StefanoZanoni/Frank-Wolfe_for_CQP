@@ -62,6 +62,7 @@ class Constraints:
         - active (np.ndarray): The indexes of the active constraints.
 
         """
+
         if self.ineq:
             return np.dot(self._subA, x) <= self._subb + self._tol
         else:
@@ -77,8 +78,8 @@ class Constraints:
         Returns:
         - message (str): A message indicating whether the solution is inside, on the edge or
          outside the feasible region.
-
         """
+
         if not self.evaluate(x):
             return 'outside'
 
@@ -89,13 +90,13 @@ class Constraints:
 
     def set_subproblem(self, k: int, dimensions: np.ndarray[bool]) -> None:
         """
-            Sets the subproblem by selecting specific dimensions and the k-th index set.
+        Sets the subproblem by selecting specific dimensions and the k-th index set.
 
-            Parameters:
-            - dimensions (np.ndarray): The dimensions to select.
-            - k (int): The k-th index set.
+        Parameters:
+        - dimensions (np.ndarray): The dimensions to select.
+        - k (int): The k-th index set.
+        """
 
-            """
         self._sub_dim = sum(dimensions)
 
         b_zero = self.b[-self._sub_dim:]
@@ -107,6 +108,12 @@ class Constraints:
         self._subA = np.vstack((A_one, A_minus_one, A_zero))
 
     def get_dim(self):
+        """
+        Returns the dimension of the subproblem.
+
+        Returns:
+        - sub_dim (int): The dimension of the subproblem.
+        """
         return self._sub_dim
 
 
@@ -126,6 +133,8 @@ class BoxConstraints(Constraints):
 
     def __init__(self, A: np.ndarray, b: np.ndarray, K: int, n: int, ineq: bool = True) -> None:
         super().__init__(A, b, K, n, ineq)
+        self._box_min = 0
+        self._box_max = 1
 
 
 def create_A(n: int, Is: list[list]) -> np.ndarray:
@@ -140,6 +149,7 @@ def create_A(n: int, Is: list[list]) -> np.ndarray:
     - A (numpy.ndarray): The created matrix A.
 
     """
+
     A1 = []
     for I in Is:
         row_k = np.zeros(n)
@@ -165,6 +175,7 @@ def create_b(n, K) -> np.ndarray:
     Returns:
     np.array: The vector b.
     """
+
     ones = np.ones(K)
     zeros = np.zeros(n)
 

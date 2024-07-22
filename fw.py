@@ -82,7 +82,6 @@ def main():
 
     print(f"Execution Time: {round(execution_time * 1000, 4)} ms")
     print(f"Iterations for each sub-problem: {iterations}")
-    print(f'Founded solution: {solution}')
     print(f'Positions in the feasible region: {positions}')
 
 

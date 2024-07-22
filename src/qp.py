@@ -109,6 +109,7 @@ class QP:
 
     Attributes:
         dim (int): The dimension of the problem.
+        _sub_dim (int): The dimension of the subproblem.
         _Q (ndarray): The quadratic matrix.
         _subQ (ndarray): The submatrix of Q.
         _q (ndarray): The linear term.
@@ -120,8 +121,10 @@ class QP:
         derivative(x): Computes the derivative of the quadratic function at point x.
         minimum(): Returns the minimum value of the quadratic function.
         set_subproblem(indexes): Sets the subproblem by selecting specific indexes.
+        get_dim(): Returns the dimension of the subproblem.
         get_Q(): Returns the submatrix of Q.
         get_q(): Returns the sub vector of q.
+        get_c(): Returns the constant term.
     """
 
     def __init__(self, dim: int, index_sets: list[list[int]], rank: float = 1, eccentricity: float = 0.9, active: float = 1,

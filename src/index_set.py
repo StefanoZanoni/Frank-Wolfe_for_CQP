@@ -5,21 +5,20 @@ import numpy as np
 
 def create_index_sets(n: int, cardinality_K: int = 1, uniform: bool = True, seed: int = None) -> list[int]:
     """
-    Create index sets for a given number of elements.
+    Creates index sets (with a minimum cardinality of 2) for a specified number of elements,
+     with options for uniform or random cardinality.
 
-    Args:
-        n (int): The total number of elements.
-        cardinality_K (int): The desired cardinality of each index set.
-        It will be ignored if uniform is False.
-        uniform (bool, optional): If True, create index sets with uniform cardinality. 
-            If False, create index sets with random cardinality.
-            Defaults to True.
-        seed (int, optional): The seed value for the random number generator.
-        Defaults to None.
+    Parameters:
+    - n (int): The total number of elements to create index sets for.
+    - cardinality_K (int, optional): The desired cardinality of each index set.
+     This parameter is ignored if `uniform` is False. Default to 1.
+    - uniform (bool, optional): Determines the uniformity of the index sets' cardinality.
+     If True, index sets will have uniform cardinality. If False, index sets will have random cardinality.
+      Defaults to True.
+    - seed (int, optional): The seed value for the random number generator, ensuring reproducibility. Defaults to None.
 
     Returns:
-        list: A list of index sets, where each index set is represented as a list of integers.
-
+    - list[int]: A list of index sets, where each index set is represented as a list of integers.
     """
 
     if seed:
