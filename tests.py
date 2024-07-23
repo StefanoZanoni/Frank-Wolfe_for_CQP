@@ -5,10 +5,9 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 
 from src.index_set import create_index_sets
-from src.constraints import create_A, create_b
-from src.constraints import BoxConstraints
+from src.constraints import create_A, create_b, Constraints
 from src.qp import QP
-from src.cqp import BCQP
+from src.cqp import CQP
 from src.solver import solve
 
 
@@ -142,7 +141,7 @@ def append_to_json_file(data, filename):
 
 def random_test(on_edge: bool = True, max_iter: int = 2000, seed: int = None):
     """
-    Conducts a random test on the box constrained quadratic problem with varying dimensions and saves the results.
+    Conducts a random test on the constrained quadratic problem with varying dimensions and saves the results.
 
     Parameters:
     - on_edge (bool, optional): Whether to initialize the starting point on the edge. Defaults to True.
@@ -171,13 +170,12 @@ def random_test(on_edge: bool = True, max_iter: int = 2000, seed: int = None):
     one_dimension_count = 0
     total_index_sets = 0
     max_iterations = 0
-    total_iterations = 0
     for n in tqdm(test_dimensions):
         Is = create_index_sets(n, uniform=False, seed=seed)
         A = create_A(n, Is)
         b = create_b(n, len(Is))
 
-        constraints = BoxConstraints(A, b, len(Is), n, ineq=True)
+        constraints = Constraints(A, b, len(Is), n, ineq=True)
 
         random_eccentricity = np.random.uniform(0, 1)
         random_rank = np.random.uniform(0.01, 1.01)
@@ -188,53 +186,40 @@ def random_test(on_edge: bool = True, max_iter: int = 2000, seed: int = None):
                      eccentricity=random_eccentricity,
                      active=random_active,
                      c=False)
-        bcqp = BCQP(problem, constraints)
-        _, execution_time, iterations, all_gaps, all_convergence_rates, positions = solve(bcqp,
-                                                                                          verbose=0,
-                                                                                          max_iter=max_iter)
+        cqp = CQP(problem, constraints)
+        _, execution_time, iterations, gaps, convergence_rates, position = solve(cqp,
+                                                                                 verbose=0,
+                                                                                 max_iter=max_iter)
 
         execution_times.append(execution_time)
-        iterations_list.extend(iterations)
-        gap_list.extend([gaps[-1] for gaps in all_gaps])
-        convergence_list.extend([convergence_rates[-1] for convergence_rates in all_convergence_rates])
-        positions_list.extend(positions)
+        iterations_list.append(iterations)
+        gap_list.append(gaps[-1])
+        convergence_list.append(convergence_rates[-1])
+        positions_list.append(position)
         one_dimension_count += sum(len(I) == 1 for I in Is)
         total_index_sets += len(Is)
-        max_iterations += iterations.count(max_iter)
-        total_iterations += len(iterations)
+        max_iterations += 1 if iterations == max_iter else 0
 
         data = {'rank': random_rank,
                 'eccentricity': random_eccentricity,
                 'active': random_active,
                 'execution_time': execution_time,
                 'iterations': iterations,
-                'positions': positions,
-                'gaps': [gaps[-1] for gaps in all_gaps],
-                'convergence_rates': [convergence_rates[-1] for convergence_rates in all_convergence_rates]}
+                'position': position,
+                'gap': gaps[-1],
+                'convergence_rate': convergence_rates[-1]}
         if on_edge:
             dump_json(data, f'tests/random_tests/dimension_{n}_edge/random_results_edge.json')
+            plot_and_save(gaps, 'Iteration', 'Gap (log scale)',
+                          f'tests/random_tests/dimension_{n}_edge/gap_edge.png')
+            plot_and_save(convergence_rates, 'Iteration', 'Convergence rate (log scale)',
+                          f'tests/random_tests/dimension_{n}_edge/convergence_rate_edge.png')
         else:
             dump_json(data, f'tests/random_tests/dimension_{n}_inside/random_results_inside.json')
-
-        if on_edge:
-            for i, gaps in enumerate(all_gaps):
-                gap_list.append(gaps[-1])
-                plot_and_save(gaps, 'Iteration', 'Gap (log scale)',
-                              f'tests/random_tests/dimension_{n}_edge/subproblem_{i}_gap_edge.png')
-        else:
-            for i, gaps in enumerate(all_gaps):
-                gap_list.append(gaps[-1])
-                plot_and_save(gaps, 'Iteration', 'Gap (log scale)',
-                              f'tests/random_tests/dimension_{n}_inside/subproblem_{i}_gap_inside.png')
-
-        if on_edge:
-            for i, convergence_rates in enumerate(all_convergence_rates):
-                plot_and_save(convergence_rates, 'Iteration', 'Convergence rate (log scale)',
-                              f'tests/random_tests/dimension_{n}_edge/subproblem_{i}_convergence_rate_edge.png')
-        else:
-            for i, convergence_rates in enumerate(all_convergence_rates):
-                plot_and_save(convergence_rates, 'Iteration', 'Convergence rate (log scale)',
-                              f'tests/random_tests/dimension_{n}_inside/subproblem_{i}_convergence_rate_inside.png')
+            plot_and_save(gaps, 'Iteration', 'Gap (log scale)',
+                          f'tests/random_tests/dimension_{n}_inside/gap_inside.png')
+            plot_and_save(convergence_rates, 'Iteration', 'Convergence rate (log scale)',
+                          f'tests/random_tests/dimension_{n}_inside/convergence_rate_inside.png')
 
     mean_time, std_time = calculate_mean_std(execution_times)
     mean_gap, std_gap = calculate_mean_std(gap_list)
@@ -242,7 +227,7 @@ def random_test(on_edge: bool = True, max_iter: int = 2000, seed: int = None):
     mean_iterations = np.mean(iterations_list)
     edge_percentage, inside_percentage = calculate_position_percentages(positions_list)
     one_dimension_percentage = (one_dimension_count / total_index_sets * 100) if total_index_sets else 0
-    max_iterations_percentage = (max_iterations / total_iterations * 100) if total_iterations else 0
+    max_iterations_percentage = (max_iterations / len(test_dimensions) * 100) if len(test_dimensions) else 0
     mean_time *= 1000
     std_time *= 1000
     data = {
@@ -267,14 +252,14 @@ def random_test(on_edge: bool = True, max_iter: int = 2000, seed: int = None):
         np.random.seed(None)
 
 
-def test_scaling(Is: list[list[int]], constraints: BoxConstraints, n: int, rank: float, eccentricity: float,
+def test_scaling(Is: list[list[int]], constraints: Constraints, n: int, rank: float, eccentricity: float,
                  active: float, test_variable: str, max_iter: int = 2000, seed: int = None) -> None:
     """
-    Tests the scaling of the box constrained quadratic problem with respect to a specific variable and saves the results.
+    Tests the scaling of the constrained quadratic problem with respect to a specific variable and saves the results.
 
     Parameters:
     - Is (list[list[int]]): The index sets for the constraints.
-    - constraints (BoxConstraints): The constraints of the BCQP problem.
+    - constraints (Constraints): The constraints of the CQP problem.
     - n (int): The dimension of the problem.
     - rank (float): The rank of the Q matrix.
     - eccentricity (float): The eccentricity of the Q matrix.
@@ -311,33 +296,23 @@ def test_scaling(Is: list[list[int]], constraints: BoxConstraints, n: int, rank:
     one_dimension_count = 0
     total_index_sets = 0
     max_iterations = 0
-    total_iterations = 0
     for _ in range(100):
         problem = QP(n, Is, rank=rank, eccentricity=eccentricity, active=active, c=False)
-        bcqp = BCQP(problem, constraints)
+        cqp = CQP(problem, constraints)
 
-        _, execution_time, iterations, all_gaps, all_convergence_rates, positions = solve(bcqp,
-                                                                                          verbose=0,
-                                                                                          max_iter=max_iter)
+        _, execution_time, iterations, gaps, convergence_rates, position = solve(cqp,
+                                                                                 verbose=0,
+                                                                                 max_iter=max_iter)
 
         # collect general statistics
         execution_times.append(execution_time)
-        iterations_list.extend(iterations)
-        gap_list.extend([gaps[-1] for gaps in all_gaps])
-        convergence_list.extend([convergence_rates[-1] for convergence_rates in all_convergence_rates])
-        positions_list.extend(positions)
+        iterations_list.append(iterations)
+        gap_list.append(gaps[-1])
+        convergence_list.append(convergence_rates[-1])
+        positions_list.append(position)
         one_dimension_count += sum(len(I) == 1 for I in Is)
         total_index_sets += len(Is)
-        max_iterations += iterations.count(max_iter)
-        total_iterations += len(iterations)
-
-    # Plotting for each subproblem
-    for i, gaps in enumerate(all_gaps):
-        plot_and_save(gaps, 'Iteration', 'Gap (log scale)',
-                      f'{problem_dir}/subproblem_{i}_gap.png')
-    for i, convergence_rates in enumerate(all_convergence_rates):
-        plot_and_save(convergence_rates, 'Iteration', 'Convergence rate (log scale)',
-                      f'{problem_dir}/subproblem_{i}_convergence_rate.png')
+        max_iterations += 1 if iterations == max_iter else 0
 
     mean_time, std_time = calculate_mean_std(execution_times)
     mean_gap, std_gap = calculate_mean_std(gap_list)
@@ -345,7 +320,7 @@ def test_scaling(Is: list[list[int]], constraints: BoxConstraints, n: int, rank:
     mean_iterations = np.mean(iterations_list)
     edge_percentage, inside_percentage = calculate_position_percentages(positions_list)
     one_dimension_percentage = (one_dimension_count / total_index_sets * 100) if total_index_sets else 0
-    max_iterations_percentage = (max_iterations / total_iterations * 100) if total_iterations else 0
+    max_iterations_percentage = ((max_iterations / 100) * 100)
     mean_time *= 1000
     std_time *= 1000
 
@@ -379,7 +354,7 @@ def test_dimension_scaling(seed: int = None, max_iter: int = 2000):
         A = create_A(n, Is)
         b = create_b(n, len(Is))
 
-        constraints = BoxConstraints(A, b, len(Is), n, ineq=True)
+        constraints = Constraints(A, b, len(Is), n, ineq=True)
         test_scaling(Is, constraints, n, rank, eccentricity, active, 'dimension',
                      seed=seed,
                      max_iter=max_iter)
@@ -395,7 +370,7 @@ def test_rank_scaling(seed: int = None, max_iter: int = 2000):
     Is = create_index_sets(n, uniform=True, cardinality_K=5, seed=seed)
     A = create_A(n, Is)
     b = create_b(n, len(Is))
-    constraints = BoxConstraints(A, b, len(Is), n, ineq=True)
+    constraints = Constraints(A, b, len(Is), n, ineq=True)
 
     for rank in tqdm(test_ranks):
         test_scaling(Is, constraints, n, rank, eccentricity, active, 'rank', seed=seed, max_iter=max_iter)
@@ -411,7 +386,7 @@ def test_eccentricity_scaling(seed: int = None, max_iter: int = 2000):
     Is = create_index_sets(n, uniform=True, cardinality_K=5, seed=seed)
     A = create_A(n, Is)
     b = create_b(n, len(Is))
-    constraints = BoxConstraints(A, b, len(Is), n, ineq=True)
+    constraints = Constraints(A, b, len(Is), n, ineq=True)
 
     for eccentricity in tqdm(test_eccentricities):
         test_scaling(Is, constraints, n, rank, eccentricity, active, 'eccentricity',
@@ -429,7 +404,7 @@ def test_active_scaling(seed: int = None, max_iter: int = 2000):
     Is = create_index_sets(n, uniform=True, cardinality_K=5, seed=seed)
     A = create_A(n, Is)
     b = create_b(n, len(Is))
-    constraints = BoxConstraints(A, b, len(Is), n, ineq=True)
+    constraints = Constraints(A, b, len(Is), n, ineq=True)
 
     for active in tqdm(test_actives):
         test_scaling(Is, constraints, n, rank, eccentricity, active, 'active', seed=seed, max_iter=max_iter)

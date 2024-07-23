@@ -2,9 +2,9 @@ import argparse
 
 from src.index_set import create_index_sets
 from src.constraints import create_A, create_b
-from src.constraints import BoxConstraints
+from src.constraints import Constraints
 from src.qp import QP
-from src.cqp import BCQP
+from src.cqp import CQP
 from src.solver import solve
 
 
@@ -72,17 +72,17 @@ def main():
     A = create_A(n, Is)
     b = create_b(n, len(Is))
 
-    constraints = BoxConstraints(A, b, len(Is), n, ineq=True)
+    constraints = Constraints(A, b, len(Is), n, ineq=True)
     problem = QP(n, Is, rank=rank, eccentricity=eccentricity, active=active, c=False)
-    bcqp = BCQP(problem, constraints)
+    cqp = CQP(problem, constraints)
 
-    solution, execution_time, iterations, all_gaps, convergence_rates, positions = (
-        solve(bcqp, on_edge, max_iter=max_iterations, verbose=verbose, plot=plot,
+    solution, execution_time, iterations, gaps, convergence_rates, positions = (
+        solve(cqp, on_edge, max_iter=max_iterations, verbose=verbose, plot=plot,
               axis_range=axis_range, dirname=directory))
 
-    print(f"Execution Time: {round(execution_time * 1000, 4)} ms")
-    print(f"Iterations for each sub-problem: {iterations}")
-    print(f'Positions in the feasible region: {positions}')
+    if verbose == 1:
+        print(f"Execution Time: {round(execution_time * 1000, 4)} ms")
+        print(f'Positions in the feasible region: {positions}')
 
 
 if __name__ == '__main__':

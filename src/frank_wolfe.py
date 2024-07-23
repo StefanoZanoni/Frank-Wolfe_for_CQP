@@ -1,22 +1,28 @@
-from src.cqp import CQP
-from src.line_search import ExactLineSearch, BackTrackingArmijoStrongWolfeLineSearch
 import numpy as np
 
+from src.cqp import CQP
+from src.constraints import Constraints
+from src.line_search import ExactLineSearch, BackTrackingArmijoStrongWolfeLineSearch
 
-def solve_LMO(grad: np.ndarray) -> np.ndarray:
+
+def solve_LMO(grad: np.ndarray, constraints: Constraints) -> np.ndarray:
     z = np.zeros_like(grad)
-    min_index = np.argmin(grad)
-    z[min_index] = 1
+    for k in range(constraints.K):
+        I_k = constraints.A[k, :] != 0
+        indices = np.where(I_k)[0]
+        min_index_local = np.argmin(grad[I_k])
+        min_index_global = indices[min_index_local]
+        z[min_index_global] = 1
     return z
 
 
-def frank_wolfe(cqp, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 1000, verbose: int = 1) \
+def frank_wolfe(cqp: CQP, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 1000, verbose: int = 1) \
         -> tuple[np.ndarray, float, int, list[float], list[float]]:
     """
     Implements the Frank-Wolfe algorithm for solving convex quadratic optimization problems.
 
     Parameters:
-    - cqp (CQP): An instance of a convex quadratic problem.
+    - cqp (CQP): An instance of a constrained quadratic problem.
     - x0 (np.ndarray): The initial point for the optimization process.
     - eps (float, optional): The tolerance for the stopping criterion. Defaults to 1e-6.
     - max_iter (int, optional): The maximum number of iterations to perform. Defaults to 1000.
@@ -50,7 +56,7 @@ def frank_wolfe(cqp, x0: np.ndarray, eps: float = 1e-6, max_iter: int = 1000, ve
         grad = cqp.problem.derivative(x)
 
         # Solve the linear minimization oracle
-        z = solve_LMO(grad)
+        z = solve_LMO(grad, cqp.constraints)
 
         # Compute the direction
         d = z - x

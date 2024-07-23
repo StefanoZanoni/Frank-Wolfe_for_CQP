@@ -9,6 +9,8 @@ class Constraints:
     Parameters:
     - A (np.ndarray): The coefficient matrix of the constraints.
     - b (np.ndarray): The right-hand side vector of the constraints.
+    - K (int): The number of index sets.
+    - n (int): The dimension of the problem.
     - ineq (bool, optional): Specifies whether the constraints are inequalities or equalities. Default is True.
 
     Attributes:
@@ -16,23 +18,24 @@ class Constraints:
     - b (np.ndarray): The right-hand side vector of the constraints.
     - ineq (bool): Specifies whether the constraints are inequalities or equalities.
     - num_constraints (int): The number of constraints.
+    - _tol (float): The tolerance for the constraints.
+    - K (int): The number of index sets.
+    - dim (int): The dimension of the problem.
 
     Methods:
     - evaluate(x): Evaluates the constraints at a given point x.
-
+    - active_constraints(x): Returns the indexes of the active constraints at a given point x.
+    - check_position(x): Checks the position of x in the feasible region.
     """
 
     def __init__(self, A: np.ndarray, b: np.ndarray, K: int, n: int, ineq: bool = True) -> None:
-        self.A = A.copy()
-        self._subA = A
-        self.b = b.copy()
-        self._subb = b
+        self.A = A
+        self.b = b
         self.ineq = ineq
         self.num_constraints = len(b)
         self._tol = 1e-8
         self.K = K
         self.dim = n
-        self._sub_dim = n
 
     def evaluate(self, x: np.ndarray) -> bool:
         """
@@ -43,15 +46,14 @@ class Constraints:
 
         Returns:
         - result (bool): The result of evaluating the constraints.
-
         """
 
         if self.ineq:
-            return (np.dot(self._subA, x) <= self._subb + self._tol).all()
+            return (np.dot(self.A, x) <= self.b + self._tol).all()
         else:
-            return (np.dot(self._subA, x) == self._subb + self._tol).all()
+            return (np.dot(self.A, x) == self.b + self._tol).all()
 
-    def active_constraints(self, x: np.ndarray) -> np.ndarray:
+    def active_constraints(self, x: np.ndarray) -> np.ndarray[bool]:
         """
         Returns the indexes of the active constraints at a given point x.
 
@@ -60,13 +62,12 @@ class Constraints:
 
         Returns:
         - active (np.ndarray): The indexes of the active constraints.
-
         """
 
         if self.ineq:
-            return np.dot(self._subA, x) <= self._subb + self._tol
+            return np.dot(self.A, x) <= self.b + self._tol
         else:
-            return np.dot(self._subA, x) == self._subb + self._tol
+            return np.dot(self.A, x) == self.b + self._tol
 
     def check_position(self, x: np.ndarray) -> str:
         """
@@ -87,54 +88,6 @@ class Constraints:
             return 'edge'
         else:
             return 'inside'
-
-    def set_subproblem(self, k: int, dimensions: np.ndarray[bool]) -> None:
-        """
-        Sets the subproblem by selecting specific dimensions and the k-th index set.
-
-        Parameters:
-        - dimensions (np.ndarray): The dimensions to select.
-        - k (int): The k-th index set.
-        """
-
-        self._sub_dim = sum(dimensions)
-
-        b_zero = self.b[-self._sub_dim:]
-        self._subb = np.concatenate(([1], [-1], b_zero))
-
-        A_one = self.A[k, dimensions]
-        A_minus_one = self.A[k + self.K, dimensions]
-        A_zero = self.A[-self._sub_dim:, dimensions]
-        self._subA = np.vstack((A_one, A_minus_one, A_zero))
-
-    def get_dim(self):
-        """
-        Returns the dimension of the subproblem.
-
-        Returns:
-        - sub_dim (int): The dimension of the subproblem.
-        """
-        return self._sub_dim
-
-
-class BoxConstraints(Constraints):
-    """
-    Represents box constraints for optimization problems.
-
-    Attributes:
-        box_min (float): The minimum value allowed for the variables.
-        box_max (float): The maximum value allowed for the variables.
-
-    Args:
-        A (np.ndarray): The coefficient matrix of the linear constraints.
-        b (np.ndarray): The right-hand side vector of the linear constraints.
-        ineq (bool, optional): Indicates whether the constraints are inequalities. Defaults to True.
-    """
-
-    def __init__(self, A: np.ndarray, b: np.ndarray, K: int, n: int, ineq: bool = True) -> None:
-        super().__init__(A, b, K, n, ineq)
-        self._box_min = 0
-        self._box_max = 1
 
 
 def create_A(n: int, Is: list[list]) -> np.ndarray:
