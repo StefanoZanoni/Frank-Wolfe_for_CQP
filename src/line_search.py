@@ -214,7 +214,7 @@ class BackTrackingArmijoStrongWolfeLineSearch(BackTrackingArmijoLineSearch):
         self.c2 = np.random.uniform(self.c1 + 1e-6, 1)
         if self.c2 <= 0.01:
             factor = 0.1 / self.c2
-            self.c2 = self.c2 * factor
+            self.c2 *= factor
 
     def compute(self, xk: np.ndarray, pk: np.ndarray) -> float:
         """
