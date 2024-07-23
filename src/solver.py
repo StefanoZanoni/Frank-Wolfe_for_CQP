@@ -159,12 +159,16 @@ def solve(cqp: CQP, init_edge: bool = True, max_iter: int = 2000, verbose: int =
 
     dim = cqp.problem.dim
 
+    x_init = np.zeros(dim)
     # Initialize the starting point
-    if init_edge:
-        x_init = np.zeros(dim)
-        x_init[0] = 1
-    else:
-        x_init = np.full(dim, 1 / dim)
+    for k in range(cqp.constraints.K):
+        I_k = cqp.constraints.A[k, :] != 0
+        indices = np.where(I_k)[0]
+        if init_edge:
+            x_init[indices[0]] = 1
+        else:
+            for index in indices:
+                x_init[index] = 1 / len(indices)
 
     # Solve the problem
     start = time.time()
