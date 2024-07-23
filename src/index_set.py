@@ -9,17 +9,30 @@ def create_index_sets(n: int, cardinality_K: int = 1, uniform: bool = True, seed
      with options for uniform or random cardinality.
 
     Parameters:
-    - n (int): The total number of elements to create index sets for.
-    - cardinality_K (int, optional): The desired cardinality of each index set.
-     This parameter is ignored if `uniform` is False. Default to 1.
-    - uniform (bool, optional): Determines the uniformity of the index sets' cardinality.
-     If True, index sets will have uniform cardinality. If False, index sets will have random cardinality.
-      Defaults to True.
-    - seed (int, optional): The seed value for the random number generator, ensuring reproducibility. Defaults to None.
+        - n (int): The total number of elements to create index sets for.
+        - cardinality_K (int, optional): The desired cardinality of each index set.
+         This parameter is ignored if `uniform` is False. Default to 1.
+        - uniform (bool, optional): Determines the uniformity of the index sets' cardinality.
+         If True, index sets will have uniform cardinality. If False, index sets will have random cardinality.
+          Defaults to True.
+        - seed (int, optional): The seed value for the random number generator, ensuring reproducibility.
+         Defaults to None.
+
+    Raises:
+        - ValueError: If `n` is less than 1.
+        - ValueError: If `cardinality_K` is less than 1.
 
     Returns:
-    - list[int]: A list of index sets, where each index set is represented as a list of integers.
+        - list[int]: A list of index sets, where each index set is represented as a list of integers.
     """
+
+    if n < 1:
+        raise ValueError("The number of elements must be greater than 0.")
+    if cardinality_K < 1:
+        raise ValueError("The cardinality of the index sets must be greater than 0.")
+
+    if n == 1:
+        return [[0]]
 
     if seed:
         random.seed(seed)
