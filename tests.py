@@ -411,12 +411,12 @@ def test_active_scaling(seed: int = None, max_iter: int = 2000):
 
 
 def test():
-    random_test(on_edge=True, seed=10011)
-    random_test(on_edge=False, seed=10011)
-    test_dimension_scaling()
-    test_rank_scaling()
-    test_eccentricity_scaling()
-    test_active_scaling()
+    random_test(on_edge=True, seed=10011, max_iter=2500)
+    random_test(on_edge=False, seed=10011, max_iter=2500)
+    test_dimension_scaling(max_iter=2500)
+    test_rank_scaling(max_iter=2500)
+    test_eccentricity_scaling(max_iter=2500)
+    test_active_scaling(max_iter=2500)
 
     print('All tests done.\n', flush=True)
 
