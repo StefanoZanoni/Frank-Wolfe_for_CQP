@@ -50,8 +50,7 @@ def main():
                              ' Axis_range[0] is the minimum value, axis_range[1] is the maximum value.'
                              ' Ignored if --plot or -p is not present.')
     parser.add_argument('--onedge', '-oe',
-                        type=bool,
-                        default=True,
+                        action='store_true',
                         help='If True, the starting point will be on the edge of the feasible region. Default is True.')
     args = parser.parse_args()
 
@@ -77,7 +76,7 @@ def main():
     cqp = CQP(problem, constraints)
 
     solution, execution_time, iterations, gaps, convergence_rates, positions = (
-        solve(cqp, on_edge, max_iter=max_iterations, verbose=verbose, plot=plot,
+        solve(cqp, init_edge=on_edge, max_iter=max_iterations, verbose=verbose, plot=plot,
               axis_range=axis_range, dirname=directory))
 
     if verbose == 1:
