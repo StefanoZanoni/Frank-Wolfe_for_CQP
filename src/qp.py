@@ -75,7 +75,7 @@ def generate_q(dim: int, Q: np.ndarray, index_sets: list[list[int]], active: flo
     r = np.logical_and(outb, np.logical_not(lr))
 
     # a small random amount to the left of the lower bound
-    z[l] -= np.random.rand(np.sum(l))
+    z[l] -= 1 + np.random.rand(np.sum(l))
     # a small random amount to the right of the upper bound
     z[r] += 1 + np.random.rand(np.sum(r))
 
